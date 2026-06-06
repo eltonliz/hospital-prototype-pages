@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>健康检测 - 医疗健康小程序</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #EDEDED; display: flex; justify-content: center; align-items: center;
+  min-height: 100vh; color: #1A1A1A; font-size: 14px;
+}
+.prototype-wrapper{display:flex;align-items:center;gap:28px}
+.switch-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:12px 20px;background:#fff;border:1px solid #ddd;border-radius:10px;
+  font-size:14px;font-weight:500;color:#555;cursor:pointer;text-decoration:none;
+  white-space:nowrap;transition:all 0.15s;box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+.switch-btn:hover{color:#3370FF;border-color:#3370FF;box-shadow:0 4px 16px rgba(0,0,0,0.1)}
+.switch-btn:active{background:#f5f7ff}
+.switch-btn svg{flex-shrink:0}
+.phone-frame {
+  width: 375px; height: 812px; background: #F5F6F7;
+  border-radius: 40px; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 6px #1a1a1a, 0 20px 60px rgba(0,0,0,0.3);
+}
+@media (max-width: 520px) {
+  body{display:block;min-height:100vh;background:#F5F6F7}
+  .prototype-wrapper{display:block}
+  .switch-btn{display:none}
+  .phone-frame{width:100vw;height:100vh;border-radius:0;box-shadow:none}
+}
+/* Status Bar */
+.status-bar {
+  height: 44px; background: #fff; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600;
+  position: relative; z-index: 100;
+}
+/* Navigation Bar */
+.nav-bar {
+  height: 44px; background: #fff; display: flex; align-items: center;
+  padding: 0 12px; border-bottom: 1px solid #f0f0f0; position: relative; z-index: 99;
+}
+.nav-bar .nav-back { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; background: none; flex-shrink: 0; }
+.nav-bar .nav-back.hidden { visibility: hidden; }
+.nav-bar .nav-title { flex: 1; text-align: center; font-size: 16px; font-weight: 600; color: #1A1A1A; }
+.nav-bar .nav-right { width: 36px; flex-shrink: 0; }
+/* Main Content Area */
+.page-container {
+  height: calc(100% - 44px - 44px - 50px); overflow: hidden; position: relative;
+}
+.page {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  overflow-y: auto; background: #F5F6F7; display: none; -webkit-overflow-scrolling: touch;
+}
+.page.active { display: block; }
+.page::-webkit-scrollbar { display: none; }
+/* TabBar */
+.tab-bar {
+  height: 50px; background: #fff; display: flex; align-items: center;
+  border-top: 1px solid #f0f0f0; position: relative; z-index: 100;
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; cursor: pointer; gap: 1px;
+  color: #999; transition: color 0.2s; padding: 4px 0; border: none; background: none;
+}
+.tab-item.active { color: #2DB5A0; }
+.tab-item:active,.cat-item:active,.grid-card:active,.list-card:active,.order-card:active,.article-card:active,.video-action-btn:active,.live-cart-float:active,.tool-row:active { transform: scale(0.97); }
+.tap-feedback{animation:miniTap .22s ease}
+@keyframes miniTap{0%{box-shadow:0 0 0 0 rgba(45,181,160,.28)}100%{box-shadow:0 0 0 8px rgba(45,181,160,0)}}
+.tab-item .tab-label { font-size: 10px; line-height: 1; }
+.tab-item svg { display: block; }
+
+/* ===== Shared Component Styles ===== */
+.section-title { font-size: 16px; font-weight: 600; color: #1A1A1A; padding: 16px 16px 12px; }
+.cards-container { padding: 0 16px 16px; }
+.card { background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+.btn { display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; font-family: inherit; font-weight: 500; transition: all 0.2s; }
+.btn-primary { background: #2DB5A0; color: #fff; border-radius: 22px; }
+.btn-primary:active { background: #28a08d; }
+.btn-outline { background: #fff; color: #2DB5A0; border: 1px solid #2DB5A0; border-radius: 22px; }
+.btn-small { height: 32px; font-size: 12px; padding: 0 16px; }
+.btn-medium { height: 40px; font-size: 14px; padding: 0 24px; }
+.btn-large { height: 48px; font-size: 16px; padding: 0 32px; }
+.btn-block { width: 100%; display: flex; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.badge-shipping { background: #FFF4E6; color: #D46B08; }
+.badge-receive { background: #E6F0FF; color: #4A90D9; }
+.badge-testing { background: #F3EEFF; color: #7C5CFC; }
+.badge-done { background: #E6F7F4; color: #2DB5A0; }
+.badge-therapy { background: #E8F7FF; color: #3370FF; }
+.badge-kit { background: #E6F7F4; color: #2DB5A0; }
+.status-note { background:#F7F8FA;border:1px solid #ECEFF3;border-radius:10px;padding:12px 14px;font-size:12px;color:#666;line-height:1.7; }
+.price { font-size: 18px; font-weight: 700; color: #E8553D; }
+.price-small { font-size: 14px; font-weight: 600; color: #E8553D; }
+.health-tip { background: #E6F7F4; border-radius: 12px; padding: 14px 16px; margin: 0 16px 16px; font-size: 12px; color: #666; line-height: 1.7; }
+.text-secondary { color: #666; }
+.text-muted { color: #999; }
+.text-center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.privacy-box { background: #F5F6F7; border-radius: 8px; padding: 12px 14px; font-size: 12px; color: #999; line-height: 1.6; }
+/* Product grid */
+.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 16px; }
+/* Scroll wrapper */
+.scroll-area { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.scroll-area::-webkit-scrollbar { display: none; }
+/* Category icons row */
+.cat-row { display: flex; justify-content: space-around; padding: 16px; background: #fff; margin-bottom: 10px; }
+.cat-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.cat-icon { width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; }
+.cat-label { font-size: 12px; color: #333; }
+/* Filter pills */
+.filter-pills { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.filter-pills::-webkit-scrollbar { display: none; }
+.filter-pill { padding: 6px 16px; border-radius: 16px; font-size: 13px; white-space: nowrap; cursor: pointer; border: 1px solid #e8e8e8; background: #fff; color: #666; transition: all 0.2s; }
+.filter-pill.active { background: #2DB5A0; color: #fff; border-color: #2DB5A0; }
+/* Horizontal progress steps */
+.progress-steps { display: flex; align-items: center; justify-content: center; padding: 16px; gap: 0; }
+.progress-step { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #999; position: relative; flex: 1; }
+.progress-step .step-circle { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; position: relative; z-index: 2; }
+.progress-step .step-circle.done { background: #2DB5A0; }
+.progress-step .step-circle.current { background: #fff; border: 2px solid #2DB5A0; }
+.progress-step .step-circle.pending { background: #e8e8e8; }
+.progress-step .step-label { text-align: center; max-width: 48px; }
+.progress-step .step-circle.current .inner-dot { width: 8px; height: 8px; border-radius: 50%; background: #2DB5A0; }
+.progress-step .step-line { position: absolute; top: 11px; left: 50%; width: 100%; height: 2px; background: #e8e8e8; z-index: 1; }
+.progress-step:last-child .step-line { display: none; }
+.progress-step .step-line.filled { background: #2DB5A0; }
+/* Form inputs */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 13px; color: #333; font-weight: 500; display: block; margin-bottom: 6px; }
+.form-input { width: 100%; height: 44px; border: 1px solid #e8e8e8; border-radius: 8px; padding: 0 14px; font-size: 14px; font-family: inherit; color: #1A1A1A; background: #fff; }
+.form-input:focus { outline: none; border-color: #2DB5A0; }
+.form-textarea { width: 100%; min-height: 88px; border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px 14px; font-size: 14px; font-family: inherit; color: #1A1A1A; background: #fff; resize: vertical; }
+.form-textarea:focus { outline: none; border-color: #2DB5A0; }
+.form-select { width: 100%; height: 44px; border: 1px solid #e8e8e8; border-radius: 8px; padding: 0 14px; font-size: 14px; font-family: inherit; color: #1A1A1A; background: #fff; appearance: auto; }
+.order-card { margin-bottom: 10px; }
+.order-card .order-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #f5f5f5; margin-bottom: 10px; }
+.order-card .order-num { font-size: 12px; color: #999; }
+.order-card .order-product { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.order-card .order-product .op-img { width: 72px; height: 72px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #2DB5A0; font-size: 18px; }
+.order-card .order-product .op-info { flex: 1; }
+.order-card .order-product .op-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.order-card .order-product .op-spec { font-size: 12px; color: #999; }
+.order-card .order-product .op-price { font-size: 14px; font-weight: 600; color: #E8553D; }
+.order-card .order-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 10px; border-top: 1px solid #f5f5f5; }
+/* Address card */
+.addr-card { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.addr-card .addr-info { flex: 1; }
+.addr-card .addr-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.addr-card .addr-detail { font-size: 12px; color: #666; line-height: 1.5; }
+/* Bottom fixed bar */
+.bottom-bar { position: sticky; bottom: 0; background: #fff; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f0f0f0; box-shadow: 0 -2px 8px rgba(0,0,0,0.04); }
+.bottom-bar .bb-left { display: flex; align-items: baseline; gap: 4px; }
+.bottom-bar .bb-left .total-label { font-size: 13px; color: #666; }
+.bottom-bar .bb-left .total-price { font-size: 18px; font-weight: 700; color: #E8553D; }
+.bottom-bar .bb-right { flex-shrink: 0; }
+/* Scan frame */
+.scan-frame { width: 220px; height: 220px; margin: 24px auto; position: relative; border: 2px dashed #2DB5A0; border-radius: 16px; overflow: hidden; }
+.scan-frame .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #2DB5A0, transparent); animation: scanMove 2s ease-in-out infinite; }
+@keyframes scanMove { 0% { top: 0; } 50% { top: calc(100% - 2px); } 100% { top: 0; } }
+/* Product detail page image area */
+.detail-img { height: 260px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #E6F7F4, #f0f8f5); border-radius: 0 0 16px 16px; }
+/* Detection flow steps */
+.flow-steps { display: flex; align-items: flex-start; justify-content: space-between; padding: 12px 0; }
+.flow-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+.flow-step .fs-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.flow-step .fs-circle.active { background: #2DB5A0; color: #fff; }
+.flow-step .fs-circle.inactive { background: #e8e8e8; color: #999; }
+.flow-step .fs-label { font-size: 10px; color: #666; text-align: center; }
+.flow-step .fs-line { position: absolute; top: 14px; left: 50%; width: 100%; height: 2px; background: #e8e8e8; }
+.flow-step:last-child .fs-line { display: none; }
+.flow-step .fs-line.active { background: #2DB5A0; }
+/* Quantity selector */
+.qty-selector { display: inline-flex; align-items: center; gap: 0; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; }
+.qty-selector button { width: 36px; height: 36px; border: none; background: #f5f6f7; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #333; }
+.qty-selector button:active { background: #e8e8e8; }
+.qty-selector .qty-value { width: 44px; text-align: center; font-size: 15px; font-weight: 500; border-left: 1px solid #e8e8e8; border-right: 1px solid #e8e8e8; line-height: 36px; }
+/* Loading bar animation for testing progress */
+.progress-bar-bg { height: 8px; background: #e8e8e8; border-radius: 4px; overflow: hidden; margin: 12px 0; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #2DB5A0, #5CC4B0); border-radius: 4px; transition: width 1s ease; }
+/* Banner gradient */
+.banner-area { padding: 24px 16px; background: linear-gradient(135deg, #2DB5A0, #5CC4B0); border-radius: 0 0 24px 24px; color: #fff; margin-bottom: 0; }
+.banner-area .banner-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.banner-area .banner-sub { font-size: 13px; opacity: 0.85; margin-bottom: 16px; }
+.order-detail-header { padding: 16px; background: #fff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.status-message-box { background: #fff8e6; border-radius: 10px; padding: 14px; margin: 10px 16px; font-size: 13px; color: #D46B08; line-height: 1.6; }
+.status-message-box.success { background: #E6F7F4; color: #2DB5A0; }
+.logistics-timeline { padding: 14px 16px; }
+.logistics-item { display: flex; gap: 12px; padding: 8px 0; position: relative; }
+.logistics-item .lt-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; background: #e8e8e8; }
+.logistics-item .lt-dot.active { background: #2DB5A0; }
+.logistics-item .lt-dot.current { background: #2DB5A0; box-shadow: 0 0 0 3px rgba(45,181,160,0.2); }
+.logistics-item .lt-content { flex: 1; }
+.logistics-item .lt-text { font-size: 13px; color: #333; }
+.logistics-item .lt-text.active { color: #2DB5A0; font-weight: 500; }
+.logistics-item .lt-time { font-size: 11px; color: #999; margin-top: 2px; }
+.logistics-item::before { content: ''; position: absolute; left: 4px; top: 20px; width: 2px; bottom: -8px; background: #e8e8e8; }
+.logistics-item:last-child::before { display: none; }
+/* Product package visuals */
+.product-visual{position:relative;overflow:hidden;background:linear-gradient(135deg,#EAF8F4,#F8FCFB);display:flex;align-items:center;justify-content:center}
+.product-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 22% 22%,rgba(255,255,255,.9),transparent 28%),linear-gradient(135deg,rgba(45,181,160,.08),rgba(51,112,255,.08))}
+.pack-box{position:relative;width:78px;height:92px;border-radius:10px;background:linear-gradient(180deg,#fff,#F8FBFC);box-shadow:0 10px 22px rgba(26,67,81,.15);border:1px solid rgba(120,162,172,.18);overflow:hidden}
+.pack-box::before{content:'';position:absolute;left:0;right:0;top:0;height:28px;background:linear-gradient(135deg,#2DB5A0,#78D6C7)}
+.pack-title{position:absolute;left:9px;right:9px;top:36px;font-size:7px;line-height:1.25;font-weight:700;color:#24434A;text-transform:uppercase}
+.pack-brand{position:absolute;left:9px;top:7px;color:#fff;font-size:7px;font-weight:700;letter-spacing:.2px}
+.pack-line{position:absolute;left:9px;right:26px;bottom:14px;height:4px;border-radius:8px;background:#DDEFF1}
+.pack-line::after{content:'';position:absolute;left:0;top:9px;width:34px;height:4px;border-radius:8px;background:#EAF3F4}
+.pack-tube{position:absolute;right:8px;bottom:12px;width:14px;height:42px;border-radius:8px;border:2px solid rgba(45,181,160,.45);background:linear-gradient(180deg,#fff 0 36%,rgba(45,181,160,.2) 36% 100%)}
+.pack-card{position:absolute;right:-18px;bottom:10px;width:34px;height:38px;border-radius:6px;background:#fff;box-shadow:0 8px 18px rgba(26,67,81,.12);border:1px solid #E3EEF0}
+.pack-card::before{content:'';position:absolute;left:6px;right:6px;top:8px;height:3px;border-radius:4px;background:#B7D9DE;box-shadow:0 8px 0 #DDECEF,0 16px 0 #EEF5F6}
+.micro-dot{position:absolute;width:5px;height:5px;border-radius:50%;background:#2DB5A0;opacity:.72}
+.md1{left:20px;top:18px}.md2{right:26px;top:22px}.md3{left:34px;bottom:20px}.md4{right:18px;bottom:24px}
+.kit-female::before{background:radial-gradient(circle at 24% 24%,rgba(255,255,255,.9),transparent 30%),linear-gradient(135deg,rgba(124,92,252,.1),rgba(237,140,190,.12))}
+.kit-female .pack-box::before{background:linear-gradient(135deg,#9C7CF5,#E9A9CF)}
+.kit-female .pack-tube{border-color:rgba(124,92,252,.4);background:linear-gradient(180deg,#fff 0 36%,rgba(124,92,252,.18) 36% 100%)}
+.kit-female .micro-dot{background:#9C7CF5}
+.kit-metabolic::before{background:radial-gradient(circle at 24% 24%,rgba(255,255,255,.9),transparent 30%),linear-gradient(135deg,rgba(255,143,31,.12),rgba(45,181,160,.09))}
+.kit-metabolic .pack-box::before{background:linear-gradient(135deg,#FFB15D,#2DB5A0)}
+.kit-metabolic .pack-card::after{content:'';position:absolute;left:7px;bottom:7px;width:4px;height:12px;border-radius:4px;background:#FF8F1F;box-shadow:8px -6px 0 #2DB5A0,16px -12px 0 #3370FF}
+.kit-digestive::before{background:radial-gradient(circle at 24% 24%,rgba(255,255,255,.9),transparent 30%),linear-gradient(135deg,rgba(51,112,255,.12),rgba(45,181,160,.08))}
+.kit-digestive .pack-box::before{background:linear-gradient(135deg,#4A90D9,#2DB5A0)}
+.kit-digestive .pack-card::after{content:'';position:absolute;left:7px;top:16px;width:20px;height:12px;border:2px solid #4A90D9;border-left-color:transparent;border-radius:50%}
+.product-visual-sm .pack-box{width:62px;height:72px;border-radius:8px}
+.product-visual-sm .pack-box::before{height:22px}
+.product-visual-sm .pack-brand{font-size:6px;top:6px;left:7px}
+.product-visual-sm .pack-title{font-size:6px;top:29px;left:7px;right:7px}
+.product-visual-sm .pack-tube{width:11px;height:31px;right:6px;bottom:10px}
+.product-visual-sm .pack-card{width:25px;height:29px;right:-12px;bottom:8px}
+.therapy-visual{position:relative;overflow:hidden;background:linear-gradient(135deg,#F3FAFF,#F8FBFC);display:flex;align-items:center;justify-content:center}
+.therapy-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 24% 24%,rgba(255,255,255,.86),transparent 30%)}
+.combo-box{position:absolute;left:12px;bottom:11px;width:56px;height:54px;border-radius:9px;background:linear-gradient(180deg,#fff,#F7FBFC);box-shadow:0 9px 18px rgba(51,112,255,.13);border:1px solid #E3EEF0}
+.combo-box::before{content:'';position:absolute;left:0;right:0;top:0;height:17px;border-radius:9px 9px 0 0;background:linear-gradient(135deg,#3370FF,#72B7F2)}
+.combo-bottle{position:absolute;right:18px;bottom:14px;width:22px;height:52px;border-radius:8px 8px 6px 6px;background:#fff;border:1px solid #DCECEF;box-shadow:0 8px 16px rgba(26,67,81,.12)}
+.combo-bottle::before{content:'';position:absolute;left:5px;right:5px;top:-6px;height:8px;border-radius:4px;background:#CFE3EA}
+.combo-bottle::after{content:'';position:absolute;left:4px;right:4px;top:20px;height:10px;border-radius:4px;background:#DCEFFF}
+.combo-sachet{position:absolute;right:36px;bottom:11px;width:22px;height:38px;border-radius:6px;background:linear-gradient(180deg,#fff,#F5FAFA);border:1px solid #E3EEF0;transform:rotate(-8deg)}
+.combo-card{position:absolute;left:48px;top:15px;width:42px;height:30px;border-radius:7px;background:#fff;border:1px solid #E3EEF0;box-shadow:0 8px 18px rgba(26,67,81,.1)}
+.combo-card::before{content:'';position:absolute;left:6px;right:6px;top:8px;height:3px;border-radius:3px;background:#B7D9DE;box-shadow:0 8px 0 #E3EEF0}
+.therapy-female .combo-box::before{background:linear-gradient(135deg,#8F73F2,#E9A9CF)}
+.therapy-female .combo-bottle::after{background:#F0E7FF}
+.therapy-female .combo-sachet{background:linear-gradient(180deg,#fff,#FBF5FA)}
+/* Grid product card */
+.grid-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.04); cursor: pointer; }
+.grid-card .gc-img { height: 118px; display: flex; align-items: center; justify-content: center; }
+.grid-card .gc-body { padding: 10px 12px 12px; }
+.grid-card .gc-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.grid-card .gc-desc { font-size: 11px; color: #999; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.grid-card .gc-price-row { display: flex; align-items: center; justify-content: space-between; }
+.grid-card .gc-price-row .price { font-size: 16px; }
+/* List product card */
+.list-card { display: flex; gap: 12px; background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); cursor: pointer; }
+.list-card .lc-img { width: 96px; height: 96px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.list-card .lc-info { flex: 1; display: flex; flex-direction: column; }
+.list-card .lc-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.list-card .lc-desc { font-size: 11px; color: #999; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+.list-card .lc-bottom { display: flex; align-items: center; justify-content: space-between; }
+.list-card .lc-bottom .price { font-size: 16px; }
+.mini-row{display:flex;align-items:center;gap:8px}
+.split-section{display:flex;justify-content:space-between;align-items:center;padding:16px 16px 12px}
+.split-section .title{font-size:16px;font-weight:700;color:#1A1A1A}
+.split-section .more{font-size:12px;color:#2DB5A0;background:#E6F7F4;border:1px solid #BFE8DD;border-radius:14px;padding:5px 10px;cursor:pointer}
+.therapy-strip{display:flex;gap:10px;overflow-x:auto;padding:0 16px 16px}
+.therapy-strip::-webkit-scrollbar{display:none}
+.therapy-card{flex:0 0 258px;background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);cursor:pointer;border:1px solid #EEF2F4}
+.therapy-card .tc-head{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.therapy-card .tc-img{width:88px;height:76px;border-radius:12px;flex-shrink:0}
+.therapy-card .tc-name{font-size:15px;font-weight:700;margin-bottom:2px}
+.therapy-card .tc-desc{font-size:12px;color:#666;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.article-card{background:#fff;border-radius:12px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 2px 12px rgba(0,0,0,.04);cursor:pointer}
+.article-card .article-title{font-size:14px;font-weight:700;margin-bottom:6px}
+.article-card .article-desc{font-size:12px;color:#666;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.article-meta{display:flex;gap:10px;font-size:11px;color:#999;margin-top:8px}
+.video-page-bg{background:#101418;color:#fff}
+.video-feed{height:100%;position:relative;background:linear-gradient(160deg,#182A2B,#1B1E27 45%,#091014);overflow:hidden}
+.video-card-main{position:absolute;left:0;right:0;top:0;bottom:0;padding:18px 16px 86px;display:flex;flex-direction:column;justify-content:flex-end}
+.video-player-box{position:absolute;left:30px;right:30px;top:72px;height:330px;border-radius:22px;background:linear-gradient(145deg,#DDF5EF,#9FDCCA);display:flex;align-items:center;justify-content:center;color:#1B7E6E;box-shadow:0 20px 50px rgba(0,0,0,.24);overflow:hidden}
+.video-player-box:before{content:"";position:absolute;inset:22px;border-radius:18px;border:1px solid rgba(27,126,110,.22)}
+.video-device{width:176px;height:220px;border-radius:26px;background:#fff;box-shadow:0 18px 36px rgba(27,126,110,.2);position:relative;display:flex;align-items:center;justify-content:center}
+.video-device:before{content:"";position:absolute;top:16px;left:48px;right:48px;height:6px;border-radius:6px;background:#DCEFEB}
+.video-device .play-ring{width:76px;height:76px;border-radius:50%;background:#E6F7F4;border:1px solid #B9E8DD;display:flex;align-items:center;justify-content:center}
+.video-device .play-ring:after{content:"";width:0;height:0;border-top:14px solid transparent;border-bottom:14px solid transparent;border-left:21px solid #2DB5A0;margin-left:5px}
+.video-device .metric-line{position:absolute;left:28px;right:28px;height:8px;border-radius:8px;background:#E9F5F2}
+.video-device .ml1{bottom:52px}.video-device .ml2{bottom:34px;right:54px}
+.video-swipe-hint{position:absolute;left:50%;top:42px;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.68);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:5px 10px}
+.video-info{max-width:280px}
+.video-title{font-size:17px;font-weight:700;margin-bottom:8px}
+.video-copy{font-size:13px;line-height:1.7;color:rgba(255,255,255,.82)}
+.video-actions{position:absolute;right:14px;bottom:138px;display:flex;flex-direction:column;gap:16px;align-items:center}
+.video-action-btn{width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.video-action-label{font-size:11px;color:rgba(255,255,255,.86);text-align:center;margin-top:4px}
+.live-entry{background:linear-gradient(135deg,#163B3A,#2DB5A0);color:#fff;border-radius:16px;margin:0 16px 12px;padding:16px;box-shadow:0 8px 20px rgba(45,181,160,.18);cursor:pointer;position:relative;overflow:hidden}
+.live-entry:after{content:"";position:absolute;right:-32px;top:-30px;width:128px;height:128px;border-radius:50%;border:22px solid rgba(255,255,255,.09)}
+.live-entry-row{position:relative;z-index:1;display:flex;align-items:center;gap:14px}
+.live-entry-visual{width:82px;height:82px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.live-entry-screen{width:58px;height:44px;border-radius:10px;background:#ECFFFA;position:relative;box-shadow:0 10px 22px rgba(0,0,0,.15)}
+.live-entry-screen:before{content:"";position:absolute;left:11px;top:10px;width:18px;height:18px;border-radius:50%;background:#9FDCCA}
+.live-entry-screen:after{content:"";position:absolute;left:10px;right:10px;bottom:8px;height:5px;border-radius:5px;background:#BFE8DD}
+.live-entry-meta{display:flex;align-items:center;gap:8px;margin:8px 0 12px;flex-wrap:wrap}
+.live-badge{display:inline-flex;align-items:center;gap:5px;border-radius:14px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.24);padding:4px 8px;font-size:11px}
+.live-badge:before{content:"";width:6px;height:6px;border-radius:50%;background:#FF6B4A}
+.live-room{height:100%;background:#111;color:#fff;position:relative;overflow:hidden}
+.live-stage{position:absolute;inset:0;background:linear-gradient(155deg,#24363B,#182021 55%,#0D1114);display:flex;align-items:center;justify-content:center;z-index:0}
+.live-host-card{width:230px;height:300px;border-radius:24px;background:linear-gradient(145deg,#DFF5EF,#9FD8CA);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 20px 42px rgba(0,0,0,.18);overflow:hidden}
+.live-host-card:before{content:"";position:absolute;left:22px;right:22px;top:22px;height:124px;border-radius:22px;background:rgba(255,255,255,.45)}
+.host-avatar{width:86px;height:86px;border-radius:50%;background:#fff;position:absolute;top:42px;box-shadow:0 10px 24px rgba(27,126,110,.16)}
+.host-avatar:before{content:"";position:absolute;left:26px;top:18px;width:34px;height:34px;border-radius:50%;background:#87CCBF}
+.host-avatar:after{content:"";position:absolute;left:19px;right:19px;bottom:14px;height:18px;border-radius:18px 18px 8px 8px;background:#BFE8DD}
+.host-board{position:absolute;left:32px;right:32px;bottom:36px;height:116px;border-radius:18px;background:#fff;padding:20px 18px;box-shadow:0 12px 26px rgba(27,126,110,.12)}
+.host-board span{display:block;height:8px;border-radius:8px;background:#DDEFEA;margin-bottom:12px}
+.host-board span:nth-child(2){width:76%}.host-board span:nth-child(3){width:58%;background:#BFE8DD}
+.live-top{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.live-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:6px 10px;font-size:12px}
+.live-comments{position:absolute;left:14px;bottom:188px;width:230px;display:flex;flex-direction:column;gap:8px;z-index:2}
+.live-comment{background:rgba(0,0,0,.28);border-radius:14px;padding:8px 10px;font-size:12px;line-height:1.5}
+.live-cart-float{position:absolute;right:14px;bottom:148px;width:56px;height:56px;border-radius:50%;background:#FFD54A;color:#3A2A00;border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,.28);cursor:pointer;z-index:3}
+.live-bottom{position:absolute;left:14px;right:14px;bottom:82px;display:flex;gap:8px;z-index:3}
+.live-bottom .btn{flex-shrink:0}
+.live-input{flex:1;height:40px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;padding:0 14px;font-size:13px}
+.cart-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0}
+.cart-item:last-child{border-bottom:none}
+.cart-thumb{width:58px;height:58px;border-radius:10px;background:linear-gradient(135deg,#E6F7F4,#D0F0EA);display:flex;align-items:center;justify-content:center;color:#2DB5A0;font-weight:700}
+.article-cover{height:150px;margin-bottom:10px;border-radius:14px;background:linear-gradient(135deg,#E6F7F4,#DFF5EF);position:relative;overflow:hidden;border:1px solid #D9EFE9}
+.article-cover:before{content:"";position:absolute;left:26px;top:22px;width:108px;height:104px;border-radius:24px;background:#fff;box-shadow:0 12px 28px rgba(45,181,160,.12)}
+.article-cover .cover-line{position:absolute;left:48px;right:150px;height:8px;border-radius:8px;background:#BFE8DD}
+.article-cover .cl1{top:52px}.article-cover .cl2{top:74px;right:178px}.article-cover .cl3{top:96px;right:164px;background:#D7F0EA}
+.article-cover .cover-ring{position:absolute;right:38px;top:34px;width:76px;height:76px;border-radius:50%;border:13px solid rgba(45,181,160,.18)}
+.article-cover .cover-ring:after{content:"";position:absolute;right:-16px;bottom:0;width:44px;height:13px;border-radius:13px;background:#7FD2C1;transform:rotate(-28deg)}
+/* Centered status page */
+.centered-status { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 16px 40px; }
+.centered-status .cs-icon { margin-bottom: 16px; }
+.centered-status .cs-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.centered-status .cs-amount { font-size: 24px; font-weight: 700; color: #E8553D; margin-bottom: 20px; }
+.centered-status .cs-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; padding: 0 24px; margin-top: 20px; }
+/* Report section */
+.report-card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); cursor: pointer; }
+.report-card .rc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.report-card .rc-title { font-size: 15px; font-weight: 600; flex: 1; }
+.recommend-row { display: flex; gap: 10px; padding: 0 16px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.recommend-row::-webkit-scrollbar { display: none; }
+.recommend-row .rec-card { flex: 0 0 160px; }
+/* Video placeholder */
+.video-placeholder { height: 140px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 13px; margin: 8px 0; }
+.step-number { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #2DB5A0; color: #fff; font-size: 11px; font-weight: 600; margin-right: 8px; flex-shrink: 0; }
+/* Toast */
+.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #1F2937; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+/* ===== Modal Styles ===== */
+.modal-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 200;
+  display: none; justify-content: center; align-items: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-overlay.bottom-sheet { align-items: flex-end; }
+.modal-overlay .modal-close-area { position: absolute; inset: 0; }
+/* Center modal card */
+.modal-card {
+  background: #fff; border-radius: 16px; padding: 24px;
+  width: 320px; max-height: 80%; position: relative; z-index: 2;
+  overflow-y: auto;
+}
+.modal-card::-webkit-scrollbar { display: none; }
+.modal-card .modal-title { font-size: 17px; font-weight: 600; text-align: center; margin-bottom: 16px; }
+.modal-card .modal-body { font-size: 13px; color: #666; line-height: 1.8; }
+/* Bottom sheet */
+.bottom-sheet-content {
+  background: #fff; border-radius: 16px 16px 0 0; padding: 20px 16px 30px;
+  width: 100%; position: relative; z-index: 2; max-height: 70%; overflow-y: auto;
+}
+.bottom-sheet-content::-webkit-scrollbar { display: none; }
+.bottom-sheet-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+.addr-select-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0; cursor: pointer;
+}
+.addr-select-item:last-child { border-bottom: none; }
+.addr-select-item .addr-radio {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid #ddd;
+  flex-shrink: 0; margin-top: 2px; display: flex;
+  align-items: center; justify-content: center;
+}
+.addr-select-item .addr-radio.selected { border-color: #2DB5A0; }
+.addr-select-item .addr-radio.selected::after {
+  content: ''; width: 10px; height: 10px; border-radius: 50%; background: #2DB5A0;
+}
+/* Profile page styles */
+.profile-user-card {
+  background: linear-gradient(135deg, #2DB5A0, #5CC4B0);
+  padding: 24px 20px; display: flex; align-items: center; gap: 16px;
+  color: #fff; position: relative;
+}
+.profile-avatar {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: rgba(255,255,255,0.3); border: 2px solid rgba(255,255,255,0.5);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.profile-info { flex: 1; }
+.profile-name { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+.profile-phone { font-size: 13px; opacity: 0.85; }
+.profile-setting-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; background: rgba(255,255,255,0.2); border-radius: 50%; flex-shrink: 0; }
+.profile-order-bar {
+  display: flex; flex-wrap: wrap; background: #fff; border-radius: 12px; margin: -12px 16px 10px;
+  padding: 8px 0 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); position: relative; z-index: 1;
+}
+.profile-order-bar .order-bar-title {
+  width: 100%; font-size: 12px; color: #999; padding: 4px 16px 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.profile-order-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 4px; cursor: pointer; border: none; background: none;
+  font-family: inherit; font-size: 11px; color: #666;
+}
+.profile-order-item .poi-count { font-size: 14px; font-weight: 700; color: #1A1A1A; }
+.profile-order-item .poi-icon {
+  width: 32px; height: 32px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center;
+}
+.profile-section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px 8px;
+}
+.profile-section-header .psh-title { font-size: 15px; font-weight: 600; color: #1A1A1A; }
+.psh-more {
+  font-size: 12px; color: #2DB5A0; cursor: pointer; background: #E6F7F4; border: 1px solid #b8e8dc;
+  font-family: inherit; padding: 6px 14px; border-radius: 16px; font-weight: 500;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 3px;
+  transition: all 0.15s; line-height: 1;
+}
+.psh-more:hover { background: #d0f0ea; border-color: #2DB5A0; }
+.psh-more:active { background: #c0e8de; }
+.profile-tools {
+  background: #fff; border-radius: 12px; margin: 0 16px 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.tool-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; cursor: pointer; background: none; width: 100%;
+  font-family: inherit; font-size: 14px; color: #333;
+  border: none; border-bottom: 1px solid #f0f0f0;
+}
+.tool-row:last-child { border-bottom: none; }
+.tool-row:active { background: #f9f9f9; }
+.tool-row .tool-left { display: flex; align-items: center; gap: 10px; }
+.tool-row .tool-arrow { color: #ccc; }
+</style>
+</head>
+<body>
+<div class="prototype-wrapper">
+  <a href="admin-prototype.html" target="_blank" class="switch-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    管理后台
+  </a>
+  <div class="phone-frame" id="app">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+      <rect x="0.5" y="0.5" width="17" height="11" rx="2" stroke="#1A1A1A"/>
+      <rect x="2" y="2" width="14" height="7" rx="1" fill="#1A1A1A"/>
+      <path d="M15 5.5V2.5" stroke="#1A1A1A"/>
+      <path d="M15 8V6.5" stroke="#1A1A1A"/>
+    </svg>
+  </div>
+
+  <!-- Navigation Bar -->
+  <div class="nav-bar" id="navBar">
+    <button class="nav-back hidden" id="navBack" onclick="goBack()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="nav-title" id="navTitle">健康检测</div>
+    <div class="nav-right"></div>
+  </div>
+
+  <!-- Page Container -->
+  <div class="page-container" id="pageContainer">
+
+    <!-- ===== PAGE 1: 商城首页 ===== -->
+    <div class="page active" id="page-home">
+      <div class="scroll-area">
+        <div style="padding:10px 16px;background:#fff;">
+          <div onclick="showToast('搜索功能')" style="display:flex;align-items:center;gap:6px;background:#f5f6f7;border-radius:20px;padding:8px 14px;cursor:pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span style="font-size:13px;color:#999;">搜索检测项目</span>
+          </div>
+        </div>
+        <div class="banner-area">
+          <div class="banner-title">健康检测服务</div>
+          <div class="banner-sub">科学检测 · 健康管理参考</div>
+          <button class="btn btn-medium" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:22px;" onclick="navigateTo('test-list')">进入检测专区</button>
+        </div>
+        <div style="margin:-10px 16px 0;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.04);background:#fff;padding:16px;">
+          <div style="display:flex;justify-content:space-around;">
+            <div class="cat-item" onclick="navigateTo('test-list')">
+              <div class="cat-icon" style="background:#E6F7F4;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </div>
+              <div class="cat-label">肠道健康</div>
+            </div>
+            <div class="cat-item" onclick="navigateTo('test-list')">
+              <div class="cat-icon" style="background:#F3EEFF;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C5CFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <div class="cat-label">女性健康</div>
+            </div>
+            <div class="cat-item" onclick="navigateTo('test-list')">
+              <div class="cat-icon" style="background:#FFF4E6;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D46B08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+              </div>
+              <div class="cat-label">代谢管理</div>
+            </div>
+            <div class="cat-item" onclick="navigateTo('test-list')">
+              <div class="cat-icon" style="background:#E6F0FF;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+              <div class="cat-label">消化健康</div>
+            </div>
+          </div>
+        </div>
+        <div class="split-section">
+          <div class="title">肠道健康检测</div>
+          <button class="more" onclick="navigateTo('test-list')">查看更多</button>
+        </div>
+        <div class="product-grid">
+          <div class="grid-card" onclick="navigateTo('product-detail')">
+            <div class="gc-img product-visual kit-gut">
+              <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              <span class="micro-dot md1"></span><span class="micro-dot md2"></span><span class="micro-dot md3"></span><span class="micro-dot md4"></span>
+            </div>
+            <div class="gc-body">
+              <div class="gc-name">肠道菌群检测</div>
+              <div class="gc-desc">评估肠道菌群多样性与健康状况</div>
+              <div class="gc-price-row"><span class="price">¥399</span><span class="text-muted" style="font-size:11px;">查看详情</span></div>
+            </div>
+          </div>
+          <div class="grid-card" onclick="navigateTo('product-detail')">
+            <div class="gc-img product-visual kit-female">
+              <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Women Care Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              <span class="micro-dot md1"></span><span class="micro-dot md2"></span><span class="micro-dot md3"></span>
+            </div>
+            <div class="gc-body">
+              <div class="gc-name">女性健康基础检测</div>
+              <div class="gc-desc">关注女性常见健康指标</div>
+              <div class="gc-price-row"><span class="price">¥499</span><span class="text-muted" style="font-size:11px;">查看详情</span></div>
+            </div>
+          </div>
+          <div class="grid-card" onclick="navigateTo('product-detail')">
+            <div class="gc-img product-visual kit-metabolic">
+              <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Metabolic Panel</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              <span class="micro-dot md1"></span><span class="micro-dot md2"></span><span class="micro-dot md4"></span>
+            </div>
+            <div class="gc-body">
+              <div class="gc-name">代谢功能评估</div>
+              <div class="gc-desc">检测代谢相关核心指标</div>
+              <div class="gc-price-row"><span class="price">¥359</span><span class="text-muted" style="font-size:11px;">查看详情</span></div>
+            </div>
+          </div>
+          <div class="grid-card" onclick="navigateTo('product-detail')">
+            <div class="gc-img product-visual kit-digestive">
+              <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Digestive Screen</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              <span class="micro-dot md1"></span><span class="micro-dot md2"></span><span class="micro-dot md3"></span>
+            </div>
+            <div class="gc-body">
+              <div class="gc-name">消化健康筛查</div>
+              <div class="gc-desc">评估消化系统功能状态</div>
+              <div class="gc-price-row"><span class="price">¥299</span><span class="text-muted" style="font-size:11px;">查看详情</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="split-section">
+          <div class="title">疗法商品</div>
+          <button class="more" onclick="navigateTo('therapy-detail')">查看推荐</button>
+        </div>
+        <div class="therapy-strip">
+          <div class="therapy-card" onclick="navigateTo('therapy-detail')">
+            <div class="tc-head">
+              <div class="tc-img therapy-visual">
+                <div class="combo-box"></div><div class="combo-bottle"></div><div class="combo-sachet"></div><div class="combo-card"></div>
+              </div>
+              <div style="flex:1;">
+                <div class="tc-name">肠道调理疗法包</div>
+                <div class="price-small">¥1,980</div>
+                <div style="font-size:11px;color:#999;margin-top:2px;">约 ¥70.7/天</div>
+              </div>
+            </div>
+            <div class="tc-desc">包含营养补充、生活方式建议和阶段性健康管理服务，不进入检测流程。</div>
+          </div>
+          <div class="therapy-card" onclick="navigateTo('therapy-detail')">
+            <div class="tc-head">
+              <div class="tc-img therapy-visual therapy-female">
+                <div class="combo-box"></div><div class="combo-bottle"></div><div class="combo-sachet"></div><div class="combo-card"></div>
+              </div>
+              <div style="flex:1;">
+                <div class="tc-name">女性微生态护理包</div>
+                <div class="price-small">¥1,680</div>
+                <div style="font-size:11px;color:#999;margin-top:2px;">约 ¥60/天</div>
+              </div>
+            </div>
+            <div class="tc-desc">面向日常护理场景，提供温和护理用品组合和健康管理参考建议。</div>
+          </div>
+        </div>
+        <div class="live-entry" onclick="navigateTo('live-room')">
+          <div class="live-entry-row">
+            <div class="live-entry-visual"><div class="live-entry-screen"></div></div>
+            <div style="flex:1;">
+              <div class="live-badge">直播中</div>
+              <div style="font-size:16px;font-weight:700;margin-top:8px;">肠道健康直播专场</div>
+              <div class="live-entry-meta"><span>86 人观看</span><span>小黄车仅展示检测盒</span></div>
+              <button class="btn btn-medium" style="height:34px;background:#fff;color:#1B7E6E;border-radius:18px;padding:0 16px;" onclick="event.stopPropagation();navigateTo('live-room')">进入直播间</button>
+            </div>
+          </div>
+        </div>
+        <div class="split-section">
+          <div class="title">健康内容</div>
+          <button class="more" onclick="navigateTo('article-list')">更多文章</button>
+        </div>
+        <div class="article-card" onclick="navigateTo('article-detail')">
+          <div class="article-title">肠道菌群与日常饮食的关系</div>
+          <div class="article-desc">从膳食纤维、发酵食品和规律作息三个角度，了解日常健康管理方式。</div>
+          <div class="article-meta"><span>阅读 3,240</span><span>2026-06-02</span></div>
+        </div>
+        <div class="article-card" onclick="navigateTo('article-detail')">
+          <div class="article-title">如何选择适合自己的检测服务</div>
+          <div class="article-desc">根据关注场景选择检测盒，检测结果仅作为健康管理参考。</div>
+          <div class="article-meta"><span>阅读 2,150</span><span>2026-05-29</span></div>
+        </div>
+        <div class="article-card" onclick="navigateTo('article-detail')">
+          <div class="article-title">女性微生态健康管理要点</div>
+          <div class="article-desc">围绕日常护理、检测服务和复查记录，建立温和、持续的健康管理方式。</div>
+          <div class="article-meta"><span>阅读 1,870</span><span>2026-05-26</span></div>
+        </div>
+        <div class="article-card" onclick="navigateTo('article-detail')">
+          <div class="article-title">代谢管理的三类常见误区</div>
+          <div class="article-desc">结合饮食记录、作息和检测结果，辅助了解个人健康状态。</div>
+          <div class="article-meta"><span>阅读 1,120</span><span>2026-05-24</span></div>
+        </div>
+        <div class="article-card" onclick="navigateTo('article-detail')">
+          <div class="article-title">消化健康与生活方式记录</div>
+          <div class="article-desc">通过规律记录和阶段性检测，帮助用户更清晰地观察身体反馈。</div>
+          <div class="article-meta"><span>阅读 980</span><span>2026-05-22</span></div>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 2: 检测板块列表 ===== -->
+    <div class="page" id="page-test-list">
+      <div class="scroll-area">
+        <div style="padding:16px 16px 8px;"><span style="font-size:18px;font-weight:700;">检测专区</span></div>
+        <div class="filter-pills">
+          <span class="filter-pill active" onclick="document.querySelectorAll('#page-test-list .filter-pill').forEach(function(p){p.classList.remove('active')});this.classList.add('active');showToast('已筛选: '+this.textContent.trim());">全部</span>
+          <span class="filter-pill" onclick="document.querySelectorAll('#page-test-list .filter-pill').forEach(function(p){p.classList.remove('active')});this.classList.add('active');showToast('已筛选: '+this.textContent.trim());">肠道健康</span>
+          <span class="filter-pill" onclick="document.querySelectorAll('#page-test-list .filter-pill').forEach(function(p){p.classList.remove('active')});this.classList.add('active');showToast('已筛选: '+this.textContent.trim());">女性健康</span>
+          <span class="filter-pill" onclick="document.querySelectorAll('#page-test-list .filter-pill').forEach(function(p){p.classList.remove('active')});this.classList.add('active');showToast('已筛选: '+this.textContent.trim());">代谢管理</span>
+        </div>
+        <div class="cards-container" style="padding-top:4px;">
+          <div class="list-card" onclick="navigateTo('product-detail')">
+            <div class="lc-img product-visual product-visual-sm kit-gut">
+              <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              <span class="micro-dot md1"></span><span class="micro-dot md2"></span>
+            </div>
+            <div class="lc-info">
+              <div class="lc-name">肠道菌群检测盒</div>
+              <div class="lc-desc">全面评估肠道菌群结构和多样性，了解肠道微生态健康状况</div>
+              <div class="lc-bottom"><span class="price">¥399</span><button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo('confirm-order')">立即购买</button></div>
+            </div>
+          </div>
+          <div class="list-card" onclick="navigateTo('product-detail')">
+            <div class="lc-img product-visual product-visual-sm kit-female">
+              <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Women Care Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              <span class="micro-dot md1"></span><span class="micro-dot md3"></span>
+            </div>
+            <div class="lc-info">
+              <div class="lc-name">女性健康基础检测盒</div>
+              <div class="lc-desc">聚焦女性高发健康问题，提供全面的健康管理参考</div>
+              <div class="lc-bottom"><span class="price">¥499</span><button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo('confirm-order')">立即购买</button></div>
+            </div>
+          </div>
+          <div class="list-card" onclick="navigateTo('product-detail')">
+            <div class="lc-img product-visual product-visual-sm kit-metabolic">
+              <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Metabolic Panel</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              <span class="micro-dot md2"></span><span class="micro-dot md4"></span>
+            </div>
+            <div class="lc-info">
+              <div class="lc-name">代谢功能评估检测盒</div>
+              <div class="lc-desc">检测糖脂代谢关键指标，评估代谢综合征风险</div>
+              <div class="lc-bottom"><span class="price">¥359</span><button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo('confirm-order')">立即购买</button></div>
+            </div>
+          </div>
+          <div class="list-card" onclick="navigateTo('product-detail')">
+            <div class="lc-img product-visual product-visual-sm kit-digestive">
+              <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Digestive Screen</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              <span class="micro-dot md1"></span><span class="micro-dot md3"></span>
+            </div>
+            <div class="lc-info">
+              <div class="lc-name">消化健康筛查检测盒</div>
+              <div class="lc-desc">检测消化系统相关指标，评估胃肠道功能状态</div>
+              <div class="lc-bottom"><span class="price">¥299</span><button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo('confirm-order')">立即购买</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 3: 检测盒详情 ===== -->
+    <div class="page" id="page-product-detail">
+      <div class="scroll-area">
+        <div class="detail-img product-visual kit-gut" style="height:260px;">
+          <div class="pack-box" style="width:132px;height:156px;border-radius:16px;"><div class="pack-brand" style="font-size:11px;top:12px;left:14px;">HEALTH TEST</div><div class="pack-title" style="font-size:12px;top:58px;left:14px;right:14px;">Gut Microbiome Test Kit</div><div class="pack-line" style="left:14px;right:42px;bottom:24px;height:7px;"></div><div class="pack-tube" style="width:24px;height:72px;right:15px;bottom:22px;"></div><div class="pack-card" style="width:54px;height:62px;right:-28px;bottom:18px;"></div></div>
+          <span class="micro-dot md1" style="width:8px;height:8px;"></span><span class="micro-dot md2" style="width:7px;height:7px;"></span><span class="micro-dot md3" style="width:8px;height:8px;"></span><span class="micro-dot md4" style="width:6px;height:6px;"></span>
+        </div>
+        <div class="cards-container" style="padding-top:12px;">
+          <div class="card">
+            <div style="font-size:18px;font-weight:700;margin-bottom:4px;">肠道菌群检测盒</div>
+            <div style="font-size:12px;color:#999;margin-bottom:8px;">广州康源生物科技有限公司</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="price" style="font-size:24px;">¥399</span>
+              <span style="font-size:12px;color:#999;">已售 2,847份</span>
+            </div>
+            <div style="font-size:12px;color:#999;margin-top:6px;">规格：1盒/次</div>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px;">商品介绍</div>
+            <p style="font-size:13px;color:#666;line-height:1.8;">本产品通过对粪便样本中的肠道微生物DNA进行高通量测序分析，全面评估肠道菌群的组成结构、多样性和功能状态。检测覆盖肠道菌群中主要门属水平的细菌，评估菌群平衡状况，为您提供个性化的饮食和生活方式管理建议。</p>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:12px;">检测流程</div>
+            <div class="flow-steps">
+              <div class="flow-step">
+                <div class="fs-circle active">1</div>
+                <div class="fs-label">下单</div>
+                <div class="fs-line"></div>
+              </div>
+              <div class="flow-step">
+                <div class="fs-circle inactive">2</div>
+                <div class="fs-label">收货</div>
+                <div class="fs-line"></div>
+              </div>
+              <div class="flow-step">
+                <div class="fs-circle inactive">3</div>
+                <div class="fs-label">扫码绑定</div>
+                <div class="fs-line"></div>
+              </div>
+              <div class="flow-step">
+                <div class="fs-circle inactive">4</div>
+                <div class="fs-label">完成检测</div>
+                <div class="fs-line"></div>
+              </div>
+              <div class="flow-step">
+                <div class="fs-circle inactive">5</div>
+                <div class="fs-label">寄回样本</div>
+                <div class="fs-line"></div>
+              </div>
+              <div class="flow-step">
+                <div class="fs-circle inactive">6</div>
+                <div class="fs-label">查看报告</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px;">使用说明</div>
+            <div class="video-placeholder" onclick="showToast('视频播放功能')" style="cursor:pointer;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span style="margin-left:6px;">视频教程</span>
+            </div>
+            <div style="font-size:13px;color:#666;line-height:2;">
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">1</span>确认包装完整，核对检测盒编码</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">2</span>扫描包装二维码绑定检测盒</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">3</span>按说明采集粪便样本，装入采样管</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">4</span>将采样管放入包装盒，寄回检测中心</div>
+            </div>
+          </div>
+          <div class="health-tip">
+            检测结果和方案仅作为健康管理参考，不替代医生诊断或治疗建议。如有明显不适，请及时到正规医疗机构就诊。
+          </div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <div class="bb-left">
+          <span class="total-label">合计：</span><span class="total-price">¥399</span>
+        </div>
+        <button class="btn btn-primary btn-medium" onclick="navigateTo('confirm-order')" style="height:44px;padding:0 40px;">立即下单</button>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 4: 确认订单 ===== -->
+    <div class="page" id="page-confirm-order">
+      <div class="scroll-area">
+        <div class="cards-container" style="padding-top:12px;">
+          <div class="card" id="confirmAddressCard">
+            <div class="addr-card" onclick="showAddressModal()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div class="addr-info" id="confirmAddrInfo">
+                <div class="addr-name">张女士 <span style="font-weight:400;color:#999;font-size:12px;">138****1234</span></div>
+                <div class="addr-detail">北京市朝阳区望京SOHO T1 1206室</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="lc-img product-visual product-visual-sm kit-gut" style="width:70px;height:70px;">
+                <div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:500;margin-bottom:2px;">肠道菌群检测盒</div>
+                <div style="font-size:12px;color:#999;">规格：1盒/次</div>
+                <div style="font-size:14px;font-weight:600;color:#E8553D;margin-top:4px;">¥399</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:10px;">价格明细</div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span class="text-secondary">商品金额</span><span>¥399</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px;"><span class="text-secondary">运费</span><span style="color:#2DB5A0;">免运费</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:15px;"><span style="font-weight:500;">实付金额</span><span class="price" style="font-size:18px;">¥399</span></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 16px 8px;">
+            <span style="font-size:11px;color:#999;">流程：</span>
+            <div style="display:flex;align-items:center;gap:2px;">
+              <span style="width:16px;height:16px;border-radius:50%;background:#2DB5A0;display:inline-flex;align-items:center;justify-content:center;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              <span style="width:16px;height:16px;border-radius:50%;background:#e8e8e8;display:inline-flex;align-items:center;justify-content:center;"><span style="width:4px;height:4px;border-radius:50%;background:#999;"></span></span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              <span style="width:16px;height:16px;border-radius:50%;background:#e8e8e8;display:inline-flex;align-items:center;justify-content:center;"><span style="width:4px;height:4px;border-radius:50%;background:#999;"></span></span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              <span style="width:16px;height:16px;border-radius:50%;background:#e8e8e8;display:inline-flex;align-items:center;justify-content:center;"><span style="width:4px;height:4px;border-radius:50%;background:#999;"></span></span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              <span style="width:16px;height:16px;border-radius:50%;background:#e8e8e8;display:inline-flex;align-items:center;justify-content:center;"><span style="width:4px;height:4px;border-radius:50%;background:#999;"></span></span>
+            </div>
+          </div>
+          <div style="height:80px;"></div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <div class="bb-left">
+          <span class="total-label">合计：</span><span class="total-price">¥399.00</span>
+        </div>
+        <button class="btn btn-primary btn-medium" onclick="navigateTo('pay-success')" style="height:44px;padding:0 36px;">提交支付</button>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 5: 支付成功 ===== -->
+    <div class="page" id="page-pay-success">
+      <div class="scroll-area">
+        <div class="centered-status">
+          <div class="cs-icon">
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" fill="#2DB5A0"/>
+              <path d="M8 12l2.5 2.5L16 9" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="cs-title">支付成功</div>
+          <div class="cs-amount">¥399.00</div>
+          <div style="background:#E6F7F4;border-radius:12px;padding:16px;width:100%;margin:0 16px;text-align:center;">
+            <div><span class="badge badge-shipping" style="margin-bottom:8px;">待发货</span></div>
+            <p style="font-size:13px;color:#666;line-height:1.6;margin-top:8px;">厂家正在准备发货，请耐心等待</p>
+          </div>
+          <div class="cs-actions">
+            <button class="btn btn-primary btn-large btn-block" onclick="navigateTo('order-detail-shipping')">查看订单</button>
+            <button class="btn btn-outline btn-large btn-block" onclick="navigateTo('home')">返回首页</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 6: 我的订单 ===== -->
+    <div class="page" id="page-orders">
+      <div class="scroll-area">
+        <div class="filter-pills">
+          <span class="filter-pill active" onclick="switchOrderTab(this)">全部</span>
+          <span class="filter-pill" onclick="switchOrderTab(this)">待发货</span>
+          <span class="filter-pill" onclick="switchOrderTab(this)">待收货</span>
+          <span class="filter-pill" onclick="switchOrderTab(this)">待检测</span>
+          <span class="filter-pill" onclick="switchOrderTab(this)">检测中</span>
+          <span class="filter-pill" onclick="switchOrderTab(this)">已完成</span>
+        </div>
+        <div class="cards-container" id="orderListContainer"></div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 7: 订单详情-待发货 ===== -->
+    <div class="page" id="page-order-detail-shipping">
+      <div class="scroll-area">
+        <div style="background:#fff;padding:16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:#999;">订单号：DD202606030001</span>
+            <span class="badge badge-shipping">待发货</span>
+          </div>
+        </div>
+        <div class="cards-container" style="padding-top:0;">
+          <div class="card">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="lc-img product-visual product-visual-sm kit-gut" style="width:70px;height:70px;"><div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:500;margin-bottom:2px;">肠道菌群检测盒</div>
+                <div style="font-size:12px;color:#999;">1盒/次</div>
+                <div style="font-size:14px;font-weight:600;color:#E8553D;margin-top:4px;">¥399</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:13px;color:#666;line-height:2;">
+              <div>下单时间：2026-06-03 14:30:25</div>
+              <div>支付时间：2026-06-03 14:30:35</div>
+              <div>支付金额：¥399.00</div>
+              <div>收货地址：北京市朝阳区望京SOHO T1 1206室</div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px;">订单进度</div>
+            <div class="progress-steps">
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">已支付</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle current"><div class="inner-dot"></div></div>
+                <div class="step-label">待发货</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle pending"></div>
+                <div class="step-label">待收货</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle pending"></div>
+                <div class="step-label">待检测</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle pending"></div>
+                <div class="step-label">已完成</div>
+              </div>
+            </div>
+          </div>
+          <div class="status-message-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D46B08" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            厂家正在准备您的检测盒，预计1-2个工作日发货
+          </div>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 8: 订单详情-待收货 ===== -->
+    <div class="page" id="page-order-detail-receive">
+      <div class="scroll-area">
+        <div style="background:#fff;padding:16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:#999;">订单号：DD202606030001</span>
+            <span class="badge badge-receive">待收货</span>
+          </div>
+        </div>
+        <div class="cards-container" style="padding-top:0;">
+          <div class="card">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="lc-img product-visual product-visual-sm kit-gut" style="width:70px;height:70px;"><div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:500;margin-bottom:2px;">肠道菌群检测盒</div>
+                <div style="font-size:12px;color:#999;">1盒/次</div>
+                <div style="font-size:14px;font-weight:600;color:#E8553D;margin-top:4px;">¥399</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px;">物流信息</div>
+            <div style="font-size:13px;color:#666;line-height:2;">
+              <div>物流公司：顺丰速运</div>
+              <div>物流单号：SF9876543210</div>
+              <div>发货时间：2026-06-04 10:15:00</div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px;">物流追踪</div>
+            <div class="logistics-timeline" style="padding:0;">
+              <div class="logistics-item">
+                <div class="lt-dot current"></div>
+                <div class="lt-content">
+                  <div class="lt-text active">快件已到达北京望京营业部</div>
+                  <div class="lt-time">2026-06-05 08:30:00</div>
+                </div>
+              </div>
+              <div class="logistics-item">
+                <div class="lt-dot active"></div>
+                <div class="lt-content">
+                  <div class="lt-text">快件已从广州集散中心发出</div>
+                  <div class="lt-time">2026-06-04 20:15:00</div>
+                </div>
+              </div>
+              <div class="logistics-item">
+                <div class="lt-dot"></div>
+                <div class="lt-content">
+                  <div class="lt-text">快递已揽收</div>
+                  <div class="lt-time">2026-06-04 10:15:00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px;">订单进度</div>
+            <div class="progress-steps">
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">已支付</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">已发货</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle current"><div class="inner-dot"></div></div>
+                <div class="step-label">待收货</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle pending"></div>
+                <div class="step-label">待检测</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle pending"></div>
+                <div class="step-label">已完成</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:16px;">
+          <button class="btn btn-primary btn-medium btn-block" onclick="navigateTo('scan-bind')" style="height:48px;">开始检测</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 9: 扫码绑定 ===== -->
+    <div class="page" id="page-scan-bind">
+      <div class="scroll-area">
+        <div style="text-align:center;padding-top:24px;">
+          <div style="font-size:18px;font-weight:600;margin-bottom:4px;">扫描检测盒二维码</div>
+          <div style="font-size:13px;color:#999;margin-bottom:8px;">请扫描检测盒包装上的二维码完成绑定</div>
+        </div>
+        <div class="scan-frame" onclick="simulateScan()" style="cursor:pointer;">
+          <div class="scan-line"></div>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.4;"><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M3 9V5a2 2 0 0 1 2-2h4"/></svg>
+        </div>
+        <div style="padding:0 32px;">
+          <div style="text-align:center;font-size:13px;color:#999;margin-bottom:12px;">或手动输入检测盒编码</div>
+          <input class="form-input" value="TB202606030042" readonly style="width:100%;text-align:center;font-size:15px;font-weight:600;background:#f5f6f7;margin-bottom:16px;">
+          <button class="btn btn-primary btn-medium btn-block" onclick="navigateTo('info-fill')" style="height:44px;">确认绑定</button>
+          <div style="text-align:center;font-size:11px;color:#999;margin-top:16px;line-height:1.6;">一个检测盒仅可绑定一次，请确认编码与当前订单匹配</div>
+        </div>
+        <div style="height:40px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 10: 检测人信息填写 ===== -->
+    <div class="page" id="page-info-fill">
+      <div class="scroll-area">
+        <div style="padding:12px 16px 4px;">
+          <div style="font-size:13px;color:#666;">检测盒编码：TB202606030042</div>
+        </div>
+        <div class="cards-container">
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">姓名</label>
+              <input class="form-input" value="李女士" placeholder="请输入姓名">
+            </div>
+            <div class="form-group">
+              <label class="form-label">手机号</label>
+              <input class="form-input" value="136****7890" placeholder="请输入手机号">
+            </div>
+            <div class="form-group">
+              <label class="form-label">症状描述</label>
+              <textarea class="form-textarea">近期肠胃不适，偶有腹胀，想了解肠道菌群状态并进行健康管理</textarea>
+            </div>
+          </div>
+          <div class="privacy-box" style="margin-bottom:16px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            信息仅用于本次检测报告生成与方案服务
+          </div>
+          <button class="btn btn-primary btn-large btn-block" onclick="submitInfoFill()" style="height:48px;">提交并进入检测</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 11: 订单详情-待检测 ===== -->
+    <div class="page" id="page-order-detail-testing-wait">
+      <div class="scroll-area">
+        <div style="background:#fff;padding:16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:#999;">订单号：DD202606030001</span>
+            <span class="badge badge-testing">待检测</span>
+          </div>
+        </div>
+        <div class="cards-container" style="padding-top:0;">
+          <div class="card">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="lc-img product-visual product-visual-sm kit-gut" style="width:70px;height:70px;"><div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:500;margin-bottom:2px;">肠道菌群检测盒</div>
+                <div style="font-size:12px;color:#999;">1盒/次</div>
+                <div style="font-size:14px;font-weight:600;color:#E8553D;margin-top:4px;">¥399</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:8px;">绑定信息</div>
+            <div style="font-size:13px;color:#666;line-height:2;">
+              <div>检测人：李女士</div>
+              <div>手机号：136****7890</div>
+              <div>症状：近期肠胃不适，偶有腹胀</div>
+              <div>检测编码：TB202606030042</div>
+              <div>绑定时间：2026-06-05 09:20:00</div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px;">检测指南</div>
+            <div style="font-size:13px;color:#666;line-height:2;">
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">1</span>按使用说明采集粪便样本</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">2</span>将样本装回包装盒</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">3</span>扫描包装上二维码绑定</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">4</span>寄回检测中心（已包含运费）</div>
+            </div>
+          </div>
+          <div class="health-tip">
+            请在采集样本后尽快寄回，常温下样本可保存7天。请勿冷冻样本。
+          </div>
+        </div>
+        <div style="padding:16px;">
+          <button class="btn btn-primary btn-medium btn-block" onclick="navigateTo('return-info')" style="height:48px;">我已完成检测，去寄回</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 12: 寄回信息填写 ===== -->
+    <div class="page" id="page-return-info">
+      <div class="scroll-area">
+        <div style="padding:16px 16px 4px;">
+          <div style="font-size:17px;font-weight:600;">填写寄回信息</div>
+        </div>
+        <div class="cards-container">
+          <div style="background:#f5f6f7;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+            <div style="font-size:13px;color:#666;line-height:1.8;">
+              <div><span style="font-weight:500;">检测中心地址：</span>广东省广州市黄埔区科学城生物岛瑞和路8号</div>
+              <div><span style="font-weight:500;">收件人：</span>康源检测中心</div>
+              <div><span style="font-weight:500;">联系电话：</span>020-83333333</div>
+            </div>
+            <button class="btn btn-outline btn-small" onclick="copyReturnAddress()" style="margin-top:8px;">复制寄回地址</button>
+          </div>
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">物流公司</label>
+              <select class="form-select"><option selected>顺丰速运</option><option>中通快递</option><option>圆通速递</option><option>韵达快递</option><option>EMS</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">物流单号</label>
+              <input class="form-input" value="SF1122334455667" placeholder="请输入物流单号">
+            </div>
+          </div>
+          <div class="health-tip" style="margin:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            请妥善保管物流凭证，检测中心收到后将尽快出具报告
+          </div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary btn-large btn-block" onclick="submitReturnInfo()" style="height:48px;">提交寄回信息</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 13: 订单详情-检测中 ===== -->
+    <div class="page" id="page-order-detail-testing">
+      <div class="scroll-area">
+        <div style="background:#fff;padding:16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:#999;">订单号：DD202606030001</span>
+            <span class="badge badge-testing">检测中</span>
+          </div>
+        </div>
+        <div class="cards-container" style="padding-top:0;">
+          <div class="card">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="lc-img product-visual product-visual-sm kit-gut" style="width:70px;height:70px;"><div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:500;margin-bottom:2px;">肠道菌群检测盒</div>
+                <div style="font-size:12px;color:#999;">1盒/次</div>
+                <div style="font-size:14px;font-weight:600;color:#E8553D;margin-top:4px;">¥399</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:8px;">寄回物流信息</div>
+            <div style="font-size:13px;color:#666;line-height:2;">
+              <div>物流公司：顺丰速运</div>
+              <div>物流单号：SF1122334455667</div>
+              <div>提交时间：2026-06-05 14:25:00</div>
+            </div>
+            <button class="btn btn-outline btn-small" onclick="showToast('物流信息：顺丰速运 SF1122334455667，已到达检测中心')" style="margin-top:8px;">查看物流</button>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px;">订单进度</div>
+            <div class="progress-steps">
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">下单</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">收货</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">寄回</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle current"><div class="inner-dot"></div></div>
+                <div class="step-label">检测中</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle pending"></div>
+                <div class="step-label">完成</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:12px;padding:24px 16px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
+            <div style="font-size:16px;font-weight:600;color:#7C5CFC;margin-bottom:10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C5CFC" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:6px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              样本检测中
+            </div>
+            <p style="font-size:13px;color:#666;line-height:1.7;margin-bottom:16px;">检测中心已收到您的样本，正在进行分析检测。预计3-5个工作日出具检测报告，请耐心等待。</p>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width:60%;"></div>
+            </div>
+            <div style="font-size:12px;color:#999;margin-top:6px;">检测进度 60%</div>
+          </div>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 14: 订单详情-已完成 ===== -->
+    <div class="page" id="page-order-detail-done">
+      <div class="scroll-area">
+        <div style="background:#fff;padding:16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:#999;">订单号：DD202606030001</span>
+            <span class="badge badge-done">已完成</span>
+          </div>
+        </div>
+        <div class="cards-container" style="padding-top:0;">
+          <div class="card">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="lc-img product-visual product-visual-sm kit-gut" style="width:70px;height:70px;"><div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:500;margin-bottom:2px;">肠道菌群检测盒</div>
+                <div style="font-size:12px;color:#999;">1盒/次</div>
+                <div style="font-size:14px;font-weight:600;color:#E8553D;margin-top:4px;">¥399</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px;">订单进度</div>
+            <div class="progress-steps">
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">下单</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">收货</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">寄回</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">检测</div>
+                <div class="step-line filled"></div>
+              </div>
+              <div class="progress-step">
+                <div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="step-label">完成</div>
+              </div>
+            </div>
+          </div>
+          <div class="report-card" onclick="navigateTo('report-plan')">
+            <div class="rc-header">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <div style="flex:1;">
+                <div style="font-size:15px;font-weight:600;">检测报告</div>
+                <div style="font-size:12px;color:#2DB5A0;">已出具 查看详情</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </div>
+          <div class="report-card" onclick="navigateTo('report-plan')">
+            <div class="rc-header">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <div style="flex:1;">
+                <div style="font-size:15px;font-weight:600;">健康管理方案</div>
+                <div style="font-size:12px;color:#666;">已确认 基于检测结果生成</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </div>
+          <div style="padding:16px 0 8px;">
+            <div style="font-size:15px;font-weight:600;">推荐商品</div>
+          </div>
+          <div class="recommend-row">
+            <div class="rec-card" style="background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
+              <div class="therapy-visual" style="width:100%;height:72px;border-radius:10px;margin-bottom:8px;"><div class="combo-bottle" style="right:48px;"></div><div class="combo-sachet" style="right:72px;"></div><div class="combo-card" style="left:18px;top:16px;"></div></div>
+              <div style="font-size:13px;font-weight:500;margin-bottom:2px;">复合益生菌胶囊</div>
+              <div style="font-size:11px;color:#999;margin-bottom:4px;">60粒</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="price-small">¥268</span>
+                <button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo('recommend-buy')">购买</button>
+              </div>
+            </div>
+            <div class="rec-card" style="background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
+              <div class="therapy-visual" style="width:100%;height:72px;border-radius:10px;margin-bottom:8px;background:linear-gradient(135deg,#FFF8EA,#F8FBFC);"><div class="combo-box" style="left:26px;"></div><div class="combo-sachet" style="right:42px;"></div><div class="combo-card" style="left:76px;top:16px;"></div></div>
+              <div style="font-size:13px;font-weight:500;margin-bottom:2px;">膳食纤维粉</div>
+              <div style="font-size:11px;color:#999;margin-bottom:4px;">500g</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="price-small">¥128</span>
+                <button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo('recommend-buy')">购买</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 15: 检测报告与方案详情 ===== -->
+    <div class="page" id="page-report-plan">
+      <div class="scroll-area">
+        <div class="cards-container" style="padding-top:12px;">
+          <div class="card">
+            <div style="font-size:16px;font-weight:600;margin-bottom:12px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" style="display:inline;vertical-align:middle;margin-right:6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              检测报告
+            </div>
+            <div style="font-size:13px;color:#666;line-height:2;">
+              <div>报告编号：BG20260608001</div>
+              <div>检测时间：2026-06-05 09:30:00</div>
+              <div>报告出具时间：2026-06-08 16:20:00</div>
+              <div style="margin-top:4px;"><span class="badge badge-done">已完成</span></div>
+            </div>
+            <div style="margin-top:12px;background:#f5f6f7;border-radius:8px;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#999;font-size:13px;cursor:pointer;" onclick="showReportPreview()">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span style="margin-top:8px;">检测报告文件（PDF）</span>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:16px;font-weight:600;margin-bottom:12px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" style="display:inline;vertical-align:middle;margin-right:6px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              健康管理方案
+            </div>
+            <div style="font-size:13px;color:#666;line-height:2.2;">
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">1</span>根据本次检测结果，建议关注日常饮食结构</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">2</span>增加全谷物和蔬菜水果的摄入比例</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">3</span>保持每周至少150分钟中等强度运动</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">4</span>规律作息，保证充足睡眠</div>
+              <div style="display:flex;align-items:flex-start;"><span class="step-number">5</span>如持续不适，建议到正规医疗机构进一步检查</div>
+            </div>
+            <div style="font-size:12px;color:#999;margin-top:8px;">方案确认时间：2026-06-08 16:20:00</div>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px;">方案图片</div>
+            <div style="background:#f5f6f7;border-radius:8px;height:160px;display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;cursor:pointer;" onclick="showReportPreview()">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span style="margin-left:8px;">方案指导图片</span>
+            </div>
+          </div>
+          <div class="health-tip">
+            检测结果和健康管理方案仅作为健康管理参考，不替代医生诊断或药物治疗。如有明显不适，请及时到正规医疗机构就诊。
+          </div>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 16: 推荐商品购买 ===== -->
+    <div class="page" id="page-recommend-buy">
+      <div class="scroll-area">
+        <div class="cards-container" style="padding-top:12px;">
+          <div class="card">
+            <div style="display:flex;gap:12px;align-items:center;">
+              <div class="therapy-visual" style="width:86px;height:82px;border-radius:12px;flex-shrink:0;"><div class="combo-bottle" style="right:18px;"></div><div class="combo-sachet" style="right:42px;"></div><div class="combo-card" style="left:12px;top:16px;"></div></div>
+              <div style="flex:1;">
+                <div style="font-size:16px;font-weight:600;margin-bottom:4px;">复合益生菌胶囊</div>
+                <div style="font-size:12px;color:#999;margin-bottom:4px;">规格：60粒/瓶</div>
+                <span class="price" style="font-size:20px;">¥268</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:14px;font-weight:500;">购买数量</span>
+              <div class="qty-selector">
+                <button onclick="decrementQty()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <span class="qty-value" id="qtyDisplay">1</span>
+                <button onclick="incrementQty()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card" id="recommendAddressCard">
+            <div class="addr-card" onclick="showAddressModal()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div class="addr-info" id="recommendAddrInfo">
+                <div class="addr-name">张女士 <span style="font-weight:400;color:#999;font-size:12px;">138****1234</span></div>
+                <div class="addr-detail">北京市朝阳区望京SOHO T1 1206室</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:10px;">价格明细</div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span class="text-secondary">商品金额</span><span>¥268</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span class="text-secondary">运费</span><span style="color:#2DB5A0;">免运费</span></div>
+          </div>
+          <div style="background:#E6F7F4;border-radius:12px;padding:14px 16px;font-size:12px;color:#666;line-height:1.7;margin-bottom:10px;">
+            该商品为健康管理方案推荐商品，购买即表示您已知晓：商品为健康管理辅助产品，不替代药物治疗。
+          </div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <div class="bb-left">
+          <span class="total-label">合计：</span><span class="total-price" id="totalPriceDisplay">¥268.00</span>
+        </div>
+        <button class="btn btn-primary btn-medium" onclick="submitRecommendOrder()" style="height:44px;padding:0 36px;">提交订单</button>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 18: 推荐商品支付成功 ===== -->
+    <div class="page" id="page-pay-success-rec">
+      <div class="scroll-area">
+        <div class="centered-status">
+          <div class="cs-icon">
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" fill="#2DB5A0"/>
+              <path d="M8 12l2.5 2.5L16 9" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="cs-title">支付成功</div>
+          <div class="cs-amount" id="recPayAmount">¥268.00</div>
+          <div style="background:#E6F7F4;border-radius:12px;padding:16px;width:100%;margin:0 16px;text-align:center;">
+            <p style="font-size:13px;color:#666;line-height:1.6;">您的订单已提交成功，商品将在1-2个工作日内发货</p>
+          </div>
+          <div class="cs-actions">
+            <button class="btn btn-primary btn-large btn-block" onclick="switchTab('orders')">查看订单</button>
+            <button class="btn btn-outline btn-large btn-block" onclick="navigateTo('home')">返回首页</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 疗法商品详情 ===== -->
+    <div class="page" id="page-therapy-detail">
+      <div class="scroll-area">
+        <div class="detail-img" style="background:linear-gradient(135deg,#E8F7FF,#F3FBFF);height:240px;">
+          <div class="therapy-visual" style="width:210px;height:150px;border-radius:28px;box-shadow:0 12px 30px rgba(51,112,255,.14);">
+            <div class="combo-box" style="width:88px;height:86px;left:34px;bottom:24px;"></div>
+            <div class="combo-bottle" style="width:34px;height:78px;right:42px;bottom:24px;"></div>
+            <div class="combo-sachet" style="width:34px;height:58px;right:78px;bottom:22px;"></div>
+            <div class="combo-card" style="left:100px;top:28px;width:62px;height:44px;"></div>
+          </div>
+        </div>
+        <div class="cards-container" style="padding-top:12px;">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+              <div>
+                <div style="font-size:18px;font-weight:700;margin-bottom:4px;">肠道调理疗法包</div>
+                <div style="font-size:12px;color:#999;">疗程规格：28天/套</div>
+              </div>
+              <span class="badge badge-therapy">疗法商品</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+              <span class="price" style="font-size:24px;">¥1,980</span>
+              <span style="font-size:12px;color:#999;">已售 326 套</span>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:8px;">商品说明</div>
+            <p style="font-size:13px;color:#666;line-height:1.8;">本商品为健康管理疗法包，包含营养补充组合、饮食记录工具和阶段性健康管理建议。购买后按普通商品履约，不需要扫码、不需要寄回样本，也不会进入检测报告和出方案流程。</p>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:10px;">疗法商品流程</div>
+            <div class="progress-steps">
+              <div class="progress-step"><div class="step-circle done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="step-label">下单</div><div class="step-line filled"></div></div>
+              <div class="progress-step"><div class="step-circle pending"></div><div class="step-label">发货</div><div class="step-line"></div></div>
+              <div class="progress-step"><div class="step-circle pending"></div><div class="step-label">收货</div><div class="step-line"></div></div>
+              <div class="progress-step"><div class="step-circle pending"></div><div class="step-label">完成</div></div>
+            </div>
+          </div>
+          <div class="status-note">疗法商品订单不展示检测盒二维码、症状填写、寄回物流、检测报告或方案信息。</div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <div class="bb-left"><span class="total-label">合计：</span><span class="total-price">¥1,980</span></div>
+        <button class="btn btn-primary btn-medium" onclick="navigateTo('therapy-confirm')" style="height:44px;padding:0 34px;">立即购买</button>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 疗法商品确认订单 ===== -->
+    <div class="page" id="page-therapy-confirm">
+      <div class="scroll-area">
+        <div class="cards-container" style="padding-top:12px;">
+          <div class="card">
+            <div class="addr-card" onclick="showAddressModal()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3370FF" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div class="addr-info"><div class="addr-name">张女士 <span style="font-weight:400;color:#999;font-size:12px;">138****1234</span></div><div class="addr-detail">北京市朝阳区望京SOHO T1 1206室</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div class="tc-img therapy-visual" style="width:78px;height:70px;"><div class="combo-box"></div><div class="combo-bottle"></div><div class="combo-sachet"></div><div class="combo-card"></div></div>
+              <div style="flex:1;"><div style="font-size:14px;font-weight:600;">肠道调理疗法包</div><div style="font-size:12px;color:#999;">28天/套</div><div class="price-small" style="margin-top:4px;">¥1,980</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:15px;font-weight:600;margin-bottom:10px;">价格明细</div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span class="text-secondary">商品金额</span><span>¥1,980</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span class="text-secondary">运费</span><span style="color:#2DB5A0;">免运费</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:15px;border-top:1px solid #f0f0f0;padding-top:10px;"><span style="font-weight:600;">实付金额</span><span class="price">¥1,980</span></div>
+          </div>
+          <div class="status-note">提交支付后订单状态由待支付更新为待发货，疗法商品不进入检测服务流程。</div>
+          <div style="height:80px;"></div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <div class="bb-left"><span class="total-label">合计：</span><span class="total-price">¥1,980.00</span></div>
+        <button class="btn btn-primary btn-medium" onclick="submitTherapyOrder()" style="height:44px;padding:0 34px;">提交支付</button>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 疗法商品待发货 ===== -->
+    <div class="page" id="page-therapy-order-shipping">
+      <div class="scroll-area">
+        <div class="order-detail-header"><span style="font-size:13px;color:#999;">订单号：TL202606060001</span><span class="badge badge-shipping">待发货</span></div>
+        <div class="cards-container">
+          <div class="card"><div class="mini-row"><div class="tc-img therapy-visual" style="width:78px;height:70px;"><div class="combo-box"></div><div class="combo-bottle"></div><div class="combo-sachet"></div><div class="combo-card"></div></div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">肠道调理疗法包</div><div style="font-size:12px;color:#999;">28天/套</div><div class="price-small">¥1,980</div></div></div></div>
+          <div class="card"><div style="font-size:13px;color:#666;line-height:2;"><div>支付时间：2026-06-06 09:20:15</div><div>收货地址：北京市朝阳区望京SOHO T1 1206室</div><div>当前状态：厂家准备发货</div></div></div>
+          <div class="status-note">该订单为疗法商品订单，仅展示发货履约信息。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 疗法商品待收货 ===== -->
+    <div class="page" id="page-therapy-order-receive">
+      <div class="scroll-area">
+        <div class="order-detail-header"><span style="font-size:13px;color:#999;">订单号：TL202606040021</span><span class="badge badge-receive">待收货</span></div>
+        <div class="cards-container">
+          <div class="card"><div class="mini-row"><div class="tc-img therapy-visual therapy-female" style="width:78px;height:70px;"><div class="combo-box"></div><div class="combo-bottle"></div><div class="combo-sachet"></div><div class="combo-card"></div></div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">女性微生态护理包</div><div style="font-size:12px;color:#999;">1套</div><div class="price-small">¥1,680</div></div></div></div>
+          <div class="card"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">物流信息</div><div style="font-size:13px;color:#666;line-height:2;"><div>物流公司：中通快递</div><div>物流单号：ZTO9876543210</div><div>预计今日送达</div></div></div>
+          <button class="btn btn-primary btn-large btn-block" onclick="confirmTherapyReceive()" style="height:48px;">确认收货</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 疗法商品已完成 ===== -->
+    <div class="page" id="page-therapy-order-done">
+      <div class="scroll-area">
+        <div class="order-detail-header"><span style="font-size:13px;color:#999;">订单号：TL202606010016</span><span class="badge badge-done">已完成</span></div>
+        <div class="cards-container">
+          <div class="card"><div class="mini-row"><div class="tc-img therapy-visual" style="width:78px;height:70px;"><div class="combo-box"></div><div class="combo-bottle"></div><div class="combo-sachet"></div><div class="combo-card"></div></div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">消化健康调理疗程</div><div style="font-size:12px;color:#999;">1套</div><div class="price-small">¥890</div></div></div></div>
+          <div class="card"><div style="font-size:14px;font-weight:600;margin-bottom:8px;">订单进度</div><div style="font-size:13px;color:#666;line-height:2;"><div>下单：2026-06-01 09:10</div><div>发货：2026-06-02 10:30</div><div>收货：2026-06-04 16:20</div><div>完成：2026-06-04 16:21</div></div></div>
+          <div class="status-note">该订单已完成，不生成检测报告或健康管理方案。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 文章列表 ===== -->
+    <div class="page" id="page-article-list">
+      <div class="scroll-area">
+        <div class="split-section"><div class="title">健康内容</div><button class="more" onclick="navigateTo('home')">返回首页</button></div>
+        <div class="article-card" onclick="navigateTo('article-detail')"><div class="article-title">肠道菌群与日常饮食的关系</div><div class="article-desc">了解膳食纤维、发酵食品和规律作息在健康管理中的作用。</div><div class="article-meta"><span>阅读 3,240</span><span>已发布</span></div></div>
+        <div class="article-card" onclick="navigateTo('article-detail')"><div class="article-title">女性微生态健康指南</div><div class="article-desc">围绕日常护理和检测服务，提供温和、克制的健康管理参考。</div><div class="article-meta"><span>阅读 1,870</span><span>已发布</span></div></div>
+        <div class="article-card" onclick="navigateTo('article-detail')"><div class="article-title">代谢管理的三大误区</div><div class="article-desc">通过生活方式记录和指标检测，辅助了解自身健康状态。</div><div class="article-meta"><span>阅读 1,120</span><span>已发布</span></div></div>
+        <div class="article-card" onclick="navigateTo('article-detail')"><div class="article-title">如何选择适合自己的检测服务</div><div class="article-desc">根据关注场景选择检测盒，检测结果仅作为健康管理参考。</div><div class="article-meta"><span>阅读 2,150</span><span>已发布</span></div></div>
+        <div class="article-card" onclick="navigateTo('article-detail')"><div class="article-title">消化健康与生活方式记录</div><div class="article-desc">通过规律记录和阶段性检测，帮助用户更清晰地观察身体反馈。</div><div class="article-meta"><span>阅读 980</span><span>已发布</span></div></div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 文章详情 ===== -->
+    <div class="page" id="page-article-detail">
+      <div class="scroll-area">
+        <div class="cards-container" style="padding-top:14px;">
+          <div class="card">
+            <div style="font-size:20px;font-weight:800;line-height:1.4;margin-bottom:8px;">肠道菌群与日常饮食的关系</div>
+            <div class="article-meta"><span>健康科普</span><span>2026-06-02</span><span>阅读 3,240</span></div>
+          </div>
+          <div class="article-cover">
+            <span class="cover-line cl1"></span>
+            <span class="cover-line cl2"></span>
+            <span class="cover-line cl3"></span>
+            <span class="cover-ring"></span>
+          </div>
+          <div class="card">
+            <p style="font-size:14px;color:#444;line-height:2;margin-bottom:10px;">肠道菌群是人体肠道内的微生态系统，日常饮食、作息、运动和压力状态都会影响菌群平衡。通过健康检测服务了解自身状态后，可以更有针对性地调整生活方式。</p>
+            <p style="font-size:14px;color:#444;line-height:2;margin-bottom:10px;">建议关注膳食纤维摄入、饮水、规律作息和适度运动。检测结果仅作为健康管理参考，不替代医生诊断或治疗建议。</p>
+          </div>
+          <div class="health-tip">如有明显不适，请及时到正规医疗机构就诊。具体诊断和用药请遵循医生建议。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 视频 ===== -->
+    <div class="page video-page-bg" id="page-video">
+      <div class="video-feed" id="videoFeed">
+        <div class="video-swipe-hint">上下滑动切换视频</div>
+        <div class="video-player-box">
+          <div class="video-device">
+            <div class="play-ring"></div>
+            <span class="metric-line ml1"></span>
+            <span class="metric-line ml2"></span>
+          </div>
+        </div>
+        <div class="video-card-main">
+          <div class="video-info">
+            <div class="video-title" id="videoTitle">肠道菌群检测盒使用教程</div>
+            <div class="video-copy" id="videoCopy">后台发布的视频内容，用户端仅支持点赞、评论、分享，评论通过审核后展示。</div>
+            <button class="btn btn-primary btn-small" onclick="navigateTo('product-detail')" style="margin-top:12px;">查看检测盒</button>
+          </div>
+        </div>
+        <div class="video-actions">
+          <div><button class="video-action-btn" onclick="likeVideo()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11v10H3V11h4z"/><path d="M7 11l4-8 1.5 1.5c.4.4.6.9.5 1.4L12.5 9H20a2 2 0 0 1 2 2l-2 8a2 2 0 0 1-2 2H7"/></svg></button><div class="video-action-label" id="likeCount">128</div></div>
+          <div><button class="video-action-btn" onclick="showVideoComments()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button><div class="video-action-label">评论</div></div>
+          <div><button class="video-action-btn" onclick="shareVideo()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button><div class="video-action-label">分享</div></div>
+          <div><button class="video-action-btn" onclick="navigateTo('live-room')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="14" rx="2"/><circle cx="12" cy="14" r="3"/><path d="M8 7V4h8v3"/></svg></button><div class="video-action-label">直播</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 直播间 ===== -->
+    <div class="page" id="page-live-room">
+      <div class="live-room">
+        <div class="live-stage">
+          <div class="live-host-card">
+            <div class="host-avatar"></div>
+            <div class="host-board"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+        <div class="live-top">
+          <div class="live-pill">肠道健康专场</div>
+          <div class="live-pill">86 人观看</div>
+        </div>
+        <div class="live-comments" id="liveComments">
+          <div class="live-comment">用户A：检测盒怎么使用？</div>
+          <div class="live-comment">主播：收到后扫码绑定，再按说明采样寄回。</div>
+          <div class="live-comment">用户B：报告多久能看到？</div>
+        </div>
+        <button class="live-cart-float" onclick="openLiveCart()">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3A2A00" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39h9.72L23 6H6"/></svg>
+        </button>
+        <div class="live-bottom">
+          <input class="live-input" id="liveCommentInput" placeholder="说点什么">
+          <button class="btn btn-primary btn-small" onclick="sendLiveComment()" style="height:40px;padding:0 16px;">发送</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE 17: 我的 (Profile) ===== -->
+    <div class="page" id="page-profile">
+      <div class="scroll-area">
+        <!-- User Info Card -->
+        <div class="profile-user-card">
+          <div class="profile-avatar">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff" fill-opacity="0.9" stroke="#fff" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="profile-info">
+            <div class="profile-name">张女士</div>
+            <div class="profile-phone">138****1234</div>
+          </div>
+          <button class="profile-setting-btn" onclick="showToast('设置功能')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+
+        <!-- Order Status Quick Entries -->
+        <div class="profile-order-bar">
+          <div class="order-bar-title"><span>我的订单</span><button class="psh-more" onclick="switchTab('orders')">查看全部 &gt;</button></div>
+          <button class="profile-order-item" onclick="navigateToOrders('pending')">
+            <div class="poi-icon" style="background:#FFF4E6;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D46B08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="poi-count">0</div>
+            <span>待支付</span>
+          </button>
+          <button class="profile-order-item" onclick="navigateToOrders('shipping')">
+            <div class="poi-icon" style="background:#FFF4E6;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D46B08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            </div>
+            <div class="poi-count">1</div>
+            <span>待发货</span>
+          </button>
+          <button class="profile-order-item" onclick="navigateToOrders('receive')">
+            <div class="poi-icon" style="background:#E6F0FF;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <div class="poi-count">1</div>
+            <span>待收货</span>
+          </button>
+          <button class="profile-order-item" onclick="navigateToOrders('testing-wait')">
+            <div class="poi-icon" style="background:#F3EEFF;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C5CFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>
+            </div>
+            <div class="poi-count">1</div>
+            <span>待检测</span>
+          </button>
+          <button class="profile-order-item" onclick="navigateToOrders('testing')">
+            <div class="poi-icon" style="background:#F3EEFF;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C5CFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v4l4 7H5l4-7V3z"/><line x1="4" y1="22" x2="20" y2="22"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            </div>
+            <div class="poi-count">1</div>
+            <span>检测中</span>
+          </button>
+          <button class="profile-order-item" onclick="navigateToOrders('done')">
+            <div class="poi-icon" style="background:#E6F7F4;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <div class="poi-count">3</div>
+            <span>已完成</span>
+          </button>
+        </div>
+
+        <!-- My Detection Section -->
+        <div class="card" style="margin:0 16px 10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+              <span style="font-size:14px;font-weight:600;">我的检测</span>
+            </div>
+            <button class="psh-more" onclick="switchTab('orders')">查看全部 &gt;</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #f5f5f5;">
+            <div class="product-visual kit-gut" style="width:44px;height:44px;border-radius:8px;flex-shrink:0;"><div class="pack-box" style="transform:scale(.42);"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:500;margin-bottom:2px;">肠道菌群检测盒</div>
+              <div style="font-size:11px;color:#999;">2026-06-03</div>
+            </div>
+            <span class="badge badge-testing">检测中</span>
+            <button class="btn btn-outline btn-small" onclick="navigateTo('order-detail-testing')" style="margin-left:4px;flex-shrink:0;">查看详情</button>
+          </div>
+        </div>
+
+        <!-- My Reports Section -->
+        <div class="card" style="margin:0 16px 10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span style="font-size:14px;font-weight:600;">我的报告</span>
+            </div>
+            <button class="psh-more" onclick="navigateTo('report-plan')">查看全部 &gt;</button>
+          </div>
+          <div style="font-size:12px;color:#666;margin-bottom:8px;">已生成报告：3 份</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #f5f5f5;">
+            <div class="product-visual kit-metabolic" style="width:44px;height:44px;border-radius:8px;flex-shrink:0;"><div class="pack-box" style="transform:scale(.42);"><div class="pack-brand">HEALTH</div><div class="pack-title">Metabolic</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:500;margin-bottom:2px;">代谢状态辅助检测盒</div>
+              <div style="font-size:11px;color:#999;">2026-05-25</div>
+            </div>
+            <button class="btn btn-outline btn-small" onclick="navigateTo('report-plan')" style="flex-shrink:0;">查看</button>
+          </div>
+        </div>
+
+        <!-- My Plans Section -->
+        <div class="card" style="margin:0 16px 10px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span style="font-size:14px;font-weight:600;">我的方案</span>
+          </div>
+          <div style="font-size:12px;color:#666;margin:8px 0;">已出方案：3 份</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #f5f5f5;">
+            <div class="product-visual kit-gut" style="width:44px;height:44px;border-radius:8px;flex-shrink:0;"><div class="pack-box" style="transform:scale(.42);"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:500;margin-bottom:2px;">肠道菌群检测盒</div>
+              <div style="font-size:11px;color:#999;">2026-06-02</div>
+            </div>
+            <button class="btn btn-outline btn-small" onclick="navigateTo('report-plan')" style="flex-shrink:0;">查看</button>
+          </div>
+        </div>
+
+        <!-- Recommendation Orders Section -->
+        <div class="card" style="margin:0 16px 10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+              <span style="font-size:14px;font-weight:600;">推荐商品订单</span>
+            </div>
+            <button class="psh-more" onclick="switchTab('orders')">查看全部 &gt;</button>
+          </div>
+          <div style="font-size:12px;color:#666;margin-bottom:4px;">通过方案购买的商品：2 笔</div>
+          <button class="btn btn-outline btn-small" onclick="switchTab('orders')" style="margin-top:8px;">查看</button>
+        </div>
+
+        <!-- Common Tools Section -->
+        <div class="profile-section-header">
+          <span class="psh-title">常用工具</span>
+        </div>
+        <div class="profile-tools">
+          <button class="tool-row" onclick="showAddressModal()">
+            <span class="tool-left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>收货地址管理</span>
+            </span>
+            <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="tool-row" onclick="showCustomerService()">
+            <span class="tool-left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>联系客服</span>
+            </span>
+            <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="tool-row" onclick="showHelp()">
+            <span class="tool-left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>使用帮助</span>
+            </span>
+            <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="tool-row" onclick="showPrivacy()">
+            <span class="tool-left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>隐私说明</span>
+            </span>
+            <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="tool-row" onclick="showAbout()">
+            <span class="tool-left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>关于平台</span>
+            </span>
+            <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <!-- Health Tip -->
+        <div class="health-tip">
+          检测结果和方案仅作为健康管理参考，不替代医生诊断或治疗建议。如有明显不适，请及时到正规医疗机构就诊。
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+
+  </div><!-- /page-container -->
+
+  <!-- ===== ADDRESS SELECTOR MODAL (bottom sheet) ===== -->
+  <div class="modal-overlay bottom-sheet" id="modalAddress">
+    <div class="modal-close-area" onclick="closeAddressModal()"></div>
+    <div class="bottom-sheet-content">
+      <div class="bottom-sheet-handle"></div>
+      <div style="font-size:16px;font-weight:600;text-align:center;margin-bottom:16px;">选择收货地址</div>
+      <div id="addressSelectorList">
+        <div class="addr-select-item" onclick="selectAddress(0)">
+          <div class="addr-radio selected"></div>
+          <div>
+            <div style="font-size:14px;font-weight:500;">张女士 <span style="font-weight:400;color:#999;font-size:12px;margin-left:4px;">138****1234</span></div>
+            <div style="font-size:12px;color:#666;margin-top:2px;">北京市朝阳区望京SOHO T1 1206室</div>
+          </div>
+        </div>
+        <div class="addr-select-item" onclick="selectAddress(1)">
+          <div class="addr-radio"></div>
+          <div>
+            <div style="font-size:14px;font-weight:500;">李先生 <span style="font-weight:400;color:#999;font-size:12px;margin-left:4px;">139****5678</span></div>
+            <div style="font-size:12px;color:#666;margin-top:2px;">上海市浦东新区张江高科技园区松涛路100号</div>
+          </div>
+        </div>
+        <div class="addr-select-item" onclick="selectAddress(2)">
+          <div class="addr-radio"></div>
+          <div>
+            <div style="font-size:14px;font-weight:500;">张女士 <span style="font-weight:400;color:#999;font-size:12px;margin-left:4px;">136****9012</span></div>
+            <div style="font-size:12px;color:#666;margin-top:2px;">广州市天河区珠江新城华夏路16号富力盈凯广场</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-medium btn-block" onclick="showAddAddressForm()" style="margin-top:16px;height:40px;">+ 新增地址</button>
+    </div>
+  </div>
+
+  <!-- ===== ADD ADDRESS FORM MODAL ===== -->
+  <div class="modal-overlay" id="modalAddAddress">
+    <div class="modal-close-area" onclick="closeAddAddressForm()"></div>
+    <div class="bottom-sheet-content" style="padding:20px 16px 40px;">
+      <div class="bottom-sheet-handle"></div>
+      <div style="font-size:16px;font-weight:600;text-align:center;margin-bottom:16px;">新增收货地址</div>
+      <div class="form-group">
+        <label class="form-label">收货人</label>
+        <input class="form-input" id="addrFormName" placeholder="请输入收货人姓名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">手机号</label>
+        <input class="form-input" id="addrFormPhone" placeholder="请输入手机号">
+      </div>
+      <div class="form-group">
+        <label class="form-label">省市区</label>
+        <input class="form-input" id="addrFormRegion" placeholder="请选择省市区">
+      </div>
+      <div class="form-group">
+        <label class="form-label">详细地址</label>
+        <input class="form-input" id="addrFormDetail" placeholder="请输入详细地址">
+      </div>
+      <div class="form-group">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="addrFormDefault" style="width:16px;height:16px;accent-color:#2DB5A0;">
+          <label for="addrFormDefault" style="font-size:13px;color:#666;">设为默认地址</label>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-medium btn-block" onclick="saveNewAddress()" style="height:44px;">保存</button>
+    </div>
+  </div>
+
+  <!-- ===== CUSTOMER SERVICE MODAL ===== -->
+  <div class="modal-overlay" id="modalCustomerService">
+    <div class="modal-close-area" onclick="closeModal('modalCustomerService')"></div>
+    <div class="modal-card">
+      <div class="modal-title">联系客服</div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <div>
+            <div style="font-weight:500;">客服电话</div>
+            <div style="color:#2DB5A0;">400-888-8888</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div>
+            <div style="font-weight:500;">在线客服</div>
+            <div style="color:#666;">工作日 9:00-18:00</div>
+          </div>
+        </div>
+        <div style="padding:12px 0;">
+          <a href="#" onclick="showToast('常见问题功能')" style="color:#2DB5A0;font-size:13px;">常见问题</a>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-medium btn-block" onclick="closeModal('modalCustomerService')" style="margin-top:16px;height:40px;">关闭</button>
+    </div>
+  </div>
+
+  <!-- ===== HELP MODAL ===== -->
+  <div class="modal-overlay" id="modalHelp">
+    <div class="modal-close-area" onclick="closeModal('modalHelp')"></div>
+    <div class="modal-card" style="max-height:70%;">
+      <div class="modal-title">使用帮助</div>
+      <div class="modal-body">
+        <div style="padding:12px 0;border-bottom:1px solid #f0f0f0;">
+          <div style="font-weight:500;margin-bottom:6px;">1. 如何购买检测服务？</div>
+          <p style="font-size:12px;color:#999;">进入首页，选择您需要的检测项目，点击商品详情页的"立即下单"按钮完成购买。</p>
+        </div>
+        <div style="padding:12px 0;border-bottom:1px solid #f0f0f0;">
+          <div style="font-weight:500;margin-bottom:6px;">2. 收到检测盒后如何操作？</div>
+          <p style="font-size:12px;color:#999;">扫描检测盒上的二维码进行绑定，按照使用说明采集样本，然后寄回检测中心。</p>
+        </div>
+        <div style="padding:12px 0;border-bottom:1px solid #f0f0f0;">
+          <div style="font-weight:500;margin-bottom:6px;">3. 检测报告多久能出？</div>
+          <p style="font-size:12px;color:#999;">检测中心收到样本后，通常在3-5个工作日内出具检测报告。</p>
+        </div>
+        <div style="padding:12px 0;border-bottom:1px solid #f0f0f0;">
+          <div style="font-weight:500;margin-bottom:6px;">4. 如何查看检测报告？</div>
+          <p style="font-size:12px;color:#999;">在"我的"页面或订单详情中点击"查看检测报告"即可查看。</p>
+        </div>
+        <div style="padding:12px 0;">
+          <div style="font-weight:500;margin-bottom:6px;">5. 检测结果的准确性如何？</div>
+          <p style="font-size:12px;color:#999;">我们采用高通量测序技术，检测结果仅供参考，不替代医生诊断。如有明显不适，请及时就诊。</p>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-medium btn-block" onclick="closeModal('modalHelp')" style="margin-top:16px;height:40px;">关闭</button>
+    </div>
+  </div>
+
+  <!-- ===== PRIVACY MODAL ===== -->
+  <div class="modal-overlay" id="modalPrivacy">
+    <div class="modal-close-area" onclick="closeModal('modalPrivacy')"></div>
+    <div class="modal-card" style="max-height:70%;">
+      <div class="modal-title">隐私说明</div>
+      <div class="modal-body">
+        <p style="margin-bottom:12px;font-size:12px;color:#666;line-height:1.8;">本平台重视您的个人信息保护。在您使用健康检测服务的过程中，我们将依法收集、使用、存储和保护您的个人信息。</p>
+        <p style="margin-bottom:12px;font-size:12px;color:#666;line-height:1.8;">1. 信息收集范围：包括您填写的姓名、联系方式、症状描述、检测样本信息等。</p>
+        <p style="margin-bottom:12px;font-size:12px;color:#666;line-height:1.8;">2. 信息使用目的：收集的信息仅用于本次检测报告生成、健康管理方案制定和后续健康服务。</p>
+        <p style="margin-bottom:12px;font-size:12px;color:#666;line-height:1.8;">3. 信息保密承诺：我们不会将您的个人信息用于任何与本服务无关的目的，不会向第三方泄露。</p>
+        <p style="margin-bottom:12px;font-size:12px;color:#666;line-height:1.8;">4. 数据存储安全：您的检测数据将采用加密方式存储，确保信息安全。</p>
+        <p style="font-size:12px;color:#666;line-height:1.8;">5. 如您对个人信息的处理有任何疑问，可联系我们的客服进行咨询。</p>
+      </div>
+      <button class="btn btn-outline btn-medium btn-block" onclick="closeModal('modalPrivacy')" style="margin-top:16px;height:40px;">关闭</button>
+    </div>
+  </div>
+
+  <!-- ===== ABOUT MODAL ===== -->
+  <div class="modal-overlay" id="modalAbout">
+    <div class="modal-close-area" onclick="closeModal('modalAbout')"></div>
+    <div class="modal-card">
+      <div class="modal-title">关于平台</div>
+      <div class="modal-body">
+        <div style="text-align:center;padding:10px 0;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="1.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <div style="font-size:16px;font-weight:600;margin-top:8px;">健康检测</div>
+          <div style="font-size:12px;color:#999;margin-top:2px;">V2.0.1</div>
+        </div>
+        <div style="padding:12px 0;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;margin:12px 0;">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#666;">提供商</span><span>广州康源生物科技有限公司</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#666;">服务热线</span><span>400-888-8888</span></div>
+        </div>
+        <p style="font-size:11px;color:#999;line-height:1.6;text-align:center;">本平台提供的健康检测服务及管理方案仅供参考，不替代医生诊断或治疗建议。</p>
+      </div>
+      <button class="btn btn-outline btn-medium btn-block" onclick="closeModal('modalAbout')" style="margin-top:16px;height:40px;">关闭</button>
+    </div>
+  </div>
+
+  <!-- ===== REPORT FULLSCREEN PREVIEW ===== -->
+  <div class="modal-overlay" id="modalReportPreview">
+    <div class="modal-close-area" onclick="closeModal('modalReportPreview')"></div>
+    <div style="background:#fff;border-radius:16px;padding:20px;width:320px;position:relative;z-index:2;text-align:center;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:600;">检测报告预览</div>
+        <button onclick="closeModal('modalReportPreview')" style="width:32px;height:32px;border:none;background:#f5f6f7;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="background:#f5f6f7;border-radius:8px;padding:30px 20px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div style="font-size:15px;font-weight:600;margin:12px 0 4px;">肠道菌群检测报告</div>
+        <div style="font-size:12px;color:#999;">报告编号：BG20260608001</div>
+        <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+          <span class="badge badge-done">菌群多样性：良好</span>
+          <span class="badge badge-shipping">需关注：2项</span>
+        </div>
+        <div style="margin-top:20px;height:120px;background:linear-gradient(135deg,#E6F7F4,#f0f8f5);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#2DB5A0;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2DB5A0" stroke-width="1.5"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span style="margin-left:6px;">报告内容预览示意图</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LIVE CART MODAL ===== -->
+  <div class="modal-overlay bottom-sheet" id="modalLiveCart">
+    <div class="modal-close-area" onclick="closeModal('modalLiveCart')"></div>
+    <div class="bottom-sheet-content">
+      <div class="bottom-sheet-handle"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:16px;font-weight:700;">直播小黄车</div>
+        <span class="badge badge-kit">仅检测盒商品</span>
+      </div>
+      <div class="cart-item" onclick="navigateTo('product-detail');closeModal('modalLiveCart')">
+        <div class="cart-thumb product-visual product-visual-sm kit-gut"><div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Gut Microbiome Test</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">肠道菌群检测盒</div>
+          <div style="font-size:12px;color:#999;margin-bottom:6px;">1盒/次，直播间推荐</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="price-small">¥399</span>
+            <button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo('confirm-order');closeModal('modalLiveCart')">立即购买</button>
+          </div>
+        </div>
+      </div>
+      <div class="cart-item" onclick="navigateTo('product-detail');closeModal('modalLiveCart')">
+        <div class="cart-thumb product-visual product-visual-sm kit-digestive"><div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">Digestive Screen</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">消化健康检测盒</div>
+          <div style="font-size:12px;color:#999;margin-bottom:6px;">1盒/次，已上架</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="price-small">¥459</span>
+            <button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo('confirm-order');closeModal('modalLiveCart')">立即购买</button>
+          </div>
+        </div>
+      </div>
+      <div class="status-note" style="margin-top:10px;">直播间下单后仍为检测盒订单，需要按检测盒流程完成扫码绑定、寄回检测和查看方案。</div>
+    </div>
+  </div>
+
+  <!-- TabBar -->
+  <div class="tab-bar">
+    <button class="tab-item active" data-tab="home" onclick="switchTab('home')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="tab-label">首页</span>
+    </button>
+    <button class="tab-item" data-tab="video" onclick="switchTab('video')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      <span class="tab-label">视频</span>
+    </button>
+    <button class="tab-item" data-tab="live-room" onclick="switchTab('live-room')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M8 7V4h8v3"/><circle cx="12" cy="14" r="3"/><path d="M12 11v6"/></svg>
+      <span class="tab-label">直播</span>
+    </button>
+    <button class="tab-item" data-tab="orders" onclick="switchTab('orders')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+      <span class="tab-label">订单</span>
+    </button>
+    <button class="tab-item" data-tab="profile" onclick="switchTab('profile')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="tab-label">我的</span>
+    </button>
+  </div>
+</div>
+</div><!-- /prototype-wrapper -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Navigation State ===== */
+var pageHistory = ['home'];
+var currentPage = 'home';
+
+var pageTitles = {
+  'home': '健康检测',
+  'test-list': '检测专区',
+  'product-detail': '商品详情',
+  'confirm-order': '确认订单',
+  'pay-success': '支付成功',
+  'therapy-detail': '疗法商品详情',
+  'therapy-confirm': '确认订单',
+  'therapy-order-shipping': '订单详情',
+  'therapy-order-receive': '订单详情',
+  'therapy-order-done': '订单详情',
+  'article-list': '健康内容',
+  'article-detail': '文章详情',
+  'video': '视频',
+  'live-room': '直播间',
+  'orders': '我的订单',
+  'order-detail-shipping': '订单详情',
+  'order-detail-receive': '订单详情',
+  'scan-bind': '扫码绑定',
+  'info-fill': '填写信息',
+  'order-detail-testing-wait': '订单详情',
+  'return-info': '寄回信息',
+  'order-detail-testing': '订单详情',
+  'order-detail-done': '订单详情',
+  'report-plan': '检测报告与方案',
+  'recommend-buy': '确认购买',
+  'pay-success-rec': '支付成功',
+  'profile': '我的'
+};
+
+var tabPages = ['home', 'video', 'live-room', 'orders', 'profile'];
+
+function showTabBar(show) {
+  document.querySelector('.tab-bar').style.display = show ? 'flex' : 'none';
+}
+
+function updateNavBar(pageId) {
+  var backBtn = document.getElementById('navBack');
+  var titleEl = document.getElementById('navTitle');
+  if (tabPages.indexOf(pageId) !== -1) {
+    backBtn.classList.add('hidden');
+  } else {
+    backBtn.classList.remove('hidden');
+  }
+  titleEl.textContent = pageTitles[pageId] || '健康检测';
+}
+
+function showPage(pageId) {
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) {
+    pages[i].classList.remove('active');
+  }
+  var target = document.getElementById('page-' + pageId);
+  if (target) {
+    target.classList.add('active');
+    var scrollArea = target.querySelector('.scroll-area');
+    if (scrollArea) scrollArea.scrollTop = 0;
+  }
+  updateNavBar(pageId);
+  currentPage = pageId;
+
+  if (tabPages.indexOf(pageId) !== -1) {
+    showTabBar(true);
+  } else {
+    showTabBar(false);
+  }
+
+  if (tabPages.indexOf(pageId) !== -1) {
+    var tabs = document.querySelectorAll('.tab-item');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === pageId);
+    }
+  }
+}
+
+function navigateTo(pageId) {
+  pageHistory.push(pageId);
+  showPage(pageId);
+}
+
+function goBack() {
+  if (pageHistory.length > 1) {
+    pageHistory.pop();
+    showPage(pageHistory[pageHistory.length - 1]);
+  }
+}
+
+function switchTab(tabId) {
+  pageHistory = [tabId];
+  showPage(tabId);
+}
+
+/* ===== Quantity Selector ===== */
+var currentQty = 1;
+var unitPrice = 268;
+
+function incrementQty() {
+  currentQty++;
+  updateQtyDisplay();
+}
+
+function decrementQty() {
+  if (currentQty > 1) {
+    currentQty--;
+    updateQtyDisplay();
+  }
+}
+
+function updateQtyDisplay() {
+  var el = document.getElementById('qtyDisplay');
+  if (el) el.textContent = currentQty;
+  var totalEl = document.getElementById('totalPriceDisplay');
+  if (totalEl) totalEl.textContent = '¥' + (currentQty * unitPrice).toFixed(2);
+}
+
+/* ===== Order List Rendering ===== */
+var orderData = [
+  { id:'JC202606030001', type:'检测盒订单', typeClass:'badge-kit', status:'待发货', statusClass:'badge-shipping', navTo:'order-detail-shipping', product:'肠道菌群检测盒', spec:'1盒/次', price:'¥399', visual:'kit-gut', theme:'kit', action:'查看详情' },
+  { id:'JC202606040002', type:'检测盒订单', typeClass:'badge-kit', status:'待收货', statusClass:'badge-receive', navTo:'order-detail-receive', product:'消化健康检测盒', spec:'1盒/次', price:'¥459', visual:'kit-digestive', theme:'kit', action:'开始检测' },
+  { id:'JC202606050003', type:'检测盒订单', typeClass:'badge-kit', status:'待检测', statusClass:'badge-testing', navTo:'order-detail-testing-wait', product:'肠道菌群检测盒', spec:'1盒/次', price:'¥399', visual:'kit-gut', theme:'kit', action:'去寄回' },
+  { id:'JC202606050004', type:'检测盒订单', typeClass:'badge-kit', status:'检测中', statusClass:'badge-testing', navTo:'order-detail-testing', product:'女性健康基础检测盒', spec:'1盒/次', price:'¥499', visual:'kit-female', theme:'kit', action:'查看进度' },
+  { id:'JC202605280005', type:'检测盒订单', typeClass:'badge-kit', status:'已完成', statusClass:'badge-done', navTo:'order-detail-done', product:'肠道菌群检测盒', spec:'1盒/次', price:'¥399', visual:'kit-gut', theme:'kit', action:'查看报告' },
+  { id:'TL202606060001', type:'疗法商品订单', typeClass:'badge-therapy', status:'待发货', statusClass:'badge-shipping', navTo:'therapy-order-shipping', product:'肠道调理疗法包', spec:'28天/套', price:'¥1,980', visual:'therapy', theme:'therapy', action:'查看详情' },
+  { id:'TL202606040021', type:'疗法商品订单', typeClass:'badge-therapy', status:'待收货', statusClass:'badge-receive', navTo:'therapy-order-receive', product:'女性微生态护理包', spec:'1套', price:'¥1,680', visual:'therapy-female', theme:'therapy', action:'确认收货' },
+  { id:'TL202606010016', type:'疗法商品订单', typeClass:'badge-therapy', status:'已完成', statusClass:'badge-done', navTo:'therapy-order-done', product:'消化健康调理疗程', spec:'1套', price:'¥890', visual:'therapy', theme:'therapy', action:'查看详情' }
+];
+
+function orderVisualHtml(order) {
+  if (order.theme === 'therapy') {
+    var female = order.visual === 'therapy-female' ? ' therapy-female' : '';
+    return '<div class="op-img therapy-visual' + female + '"><div class="combo-box"></div><div class="combo-bottle"></div><div class="combo-sachet"></div><div class="combo-card"></div></div>';
+  }
+  return '<div class="op-img product-visual product-visual-sm ' + order.visual + '"><div class="pack-box"><div class="pack-brand">HEALTH</div><div class="pack-title">' + (order.visual === 'kit-digestive' ? 'Digestive Screen' : order.visual === 'kit-female' ? 'Women Care Test' : 'Gut Microbiome Test') + '</div><div class="pack-line"></div><div class="pack-tube"></div><div class="pack-card"></div></div></div>';
+}
+
+function renderOrders() {
+  var container = document.getElementById('orderListContainer');
+  if (!container) return;
+  var html = '';
+  for (var i = 0; i < orderData.length; i++) {
+    var order = orderData[i];
+    var actionHtml = '';
+    if (order.theme === 'kit' && order.status === '已完成') {
+      actionHtml = '<button class="btn btn-outline btn-small" onclick="event.stopPropagation();navigateTo(\'report-plan\')">查看报告</button><button class="btn btn-primary btn-small" onclick="event.stopPropagation();navigateTo(\'report-plan\')">查看方案</button>';
+    } else if (order.theme === 'kit' && order.status === '检测中') {
+      actionHtml = '<span style="font-size:12px;color:#999;line-height:32px;">报告已上传前，用户端统一展示检测中</span><button class="btn btn-outline btn-small" onclick="event.stopPropagation();navigateTo(\'' + order.navTo + '\')">查看进度</button>';
+    } else {
+      actionHtml = '<button class="btn ' + (order.theme === 'kit' && order.status !== '待发货' ? 'btn-primary' : 'btn-outline') + ' btn-small" onclick="event.stopPropagation();navigateTo(\'' + order.navTo + '\')">' + order.action + '</button>';
+    }
+    html += '<div class="card order-card" data-status="' + order.status + '" style="cursor:pointer;" onclick="navigateTo(\'' + order.navTo + '\')">';
+    html += '<div class="order-header"><span class="order-num">订单号：' + order.id + '</span><span class="badge ' + order.statusClass + '">' + order.status + '</span></div>';
+    html += '<div style="display:flex;gap:6px;margin-bottom:10px;"><span class="badge ' + order.typeClass + '">' + order.type + '</span></div>';
+    html += '<div class="order-product">' + orderVisualHtml(order);
+    html += '<div class="op-info"><div class="op-name">' + order.product + '</div><div class="op-spec">' + order.spec + '</div><div class="op-price">' + order.price + '</div></div></div>';
+    html += '<div class="status-note" style="margin-bottom:10px;">' + (order.theme === 'kit' ? '检测盒订单包含扫码绑定、寄回检测、报告和方案。' : '疗法商品订单只包含支付、发货、收货、完成。') + '</div>';
+    html += '<div class="order-actions">' + actionHtml + '</div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function switchOrderTab(el) {
+  var pills = document.querySelectorAll('#page-orders .filter-pill');
+  for (var i = 0; i < pills.length; i++) {
+    pills[i].classList.remove('active');
+  }
+  el.classList.add('active');
+  // Filter orders based on tab
+  var filter = el.textContent.trim();
+  var cards = document.querySelectorAll('#orderListContainer .order-card');
+  if (filter === '全部') {
+    for (var i = 0; i < cards.length; i++) { cards[i].style.display = ''; }
+  } else {
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].getAttribute('data-status') === filter) {
+        cards[i].style.display = '';
+      } else {
+        cards[i].style.display = 'none';
+      }
+    }
+  }
+}
+
+/* ===== Profile Order Navigation ===== */
+function navigateToOrders(status) {
+  var statusMap = {
+    'pending': '待支付',
+    'shipping': '待发货',
+    'receive': '待收货',
+    'testing-wait': '待检测',
+    'testing': '检测中',
+    'done': '已完成'
+  };
+  switchTab('orders');
+  var label = statusMap[status] || '';
+  if (label) {
+    var pills = document.querySelectorAll('#page-orders .filter-pill');
+    for (var i = 0; i < pills.length; i++) {
+      if (pills[i].textContent.trim() === label) {
+        switchOrderTab(pills[i]);
+        break;
+      }
+    }
+  }
+}
+
+/* ===== Modal Functions ===== */
+function showAddressModal() {
+  document.getElementById('modalAddress').classList.add('active');
+}
+function closeAddressModal() {
+  document.getElementById('modalAddress').classList.remove('active');
+}
+function showAddAddressForm() {
+  document.getElementById('modalAddAddress').classList.add('active');
+}
+function closeAddAddressForm() {
+  document.getElementById('modalAddAddress').classList.remove('active');
+}
+
+var addressData = [
+  { name: '张女士', phone: '138****1234', addr: '北京市朝阳区望京SOHO T1 1206室' },
+  { name: '李先生', phone: '139****5678', addr: '上海市浦东新区张江高科技园区松涛路100号' },
+  { name: '张女士', phone: '136****9012', addr: '广州市天河区珠江新城华夏路16号富力盈凯广场' }
+];
+var selectedAddressIdx = 0;
+
+function selectAddress(idx) {
+  selectedAddressIdx = idx;
+  var items = document.querySelectorAll('#addressSelectorList .addr-radio');
+  for (var i = 0; i < items.length; i++) {
+    items[i].classList.toggle('selected', i === idx);
+  }
+  var addr = addressData[idx];
+  var confirmInfo = document.getElementById('confirmAddrInfo');
+  if (confirmInfo) {
+    confirmInfo.innerHTML = '<div class="addr-name">' + addr.name + ' <span style="font-weight:400;color:#999;font-size:12px;">' + addr.phone + '</span></div><div class="addr-detail">' + addr.addr + '</div>';
+  }
+  var recInfo = document.getElementById('recommendAddrInfo');
+  if (recInfo) {
+    recInfo.innerHTML = '<div class="addr-name">' + addr.name + ' <span style="font-weight:400;color:#999;font-size:12px;">' + addr.phone + '</span></div><div class="addr-detail">' + addr.addr + '</div>';
+  }
+  closeAddressModal();
+}
+
+function saveNewAddress() {
+  var name = document.getElementById('addrFormName').value.trim();
+  var phone = document.getElementById('addrFormPhone').value.trim();
+  var region = document.getElementById('addrFormRegion').value.trim();
+  var detail = document.getElementById('addrFormDetail').value.trim();
+  if (!name || !phone || !region || !detail) {
+    showToast('请填写完整的收货地址信息');
+    return;
+  }
+  var fullAddr = region + ' ' + detail;
+  var newIdx = addressData.length;
+  addressData.push({ name: name, phone: phone, addr: fullAddr });
+  showToast('地址已保存');
+  closeAddAddressForm();
+  // Refresh address list
+  var listHtml = '';
+  for (var i = 0; i < addressData.length; i++) {
+    var a = addressData[i];
+    var isSelected = (i === newIdx) ? 'selected' : '';
+    listHtml += '<div class="addr-select-item" onclick="selectAddress(' + i + ')">';
+    listHtml += '<div class="addr-radio ' + isSelected + '"></div>';
+    listHtml += '<div><div style="font-size:14px;font-weight:500;">' + a.name + ' <span style="font-weight:400;color:#999;font-size:12px;margin-left:4px;">' + a.phone + '</span></div>';
+    listHtml += '<div style="font-size:12px;color:#666;margin-top:2px;">' + a.addr + '</div></div></div>';
+  }
+  document.getElementById('addressSelectorList').innerHTML = listHtml;
+  selectAddress(newIdx);
+}
+
+function showCustomerService() {
+  document.getElementById('modalCustomerService').classList.add('active');
+}
+function showHelp() {
+  document.getElementById('modalHelp').classList.add('active');
+}
+function showPrivacy() {
+  document.getElementById('modalPrivacy').classList.add('active');
+}
+function showAbout() {
+  document.getElementById('modalAbout').classList.add('active');
+}
+function showReportPreview() {
+  document.getElementById('modalReportPreview').classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+/* ===== Scan Simulation ===== */
+function simulateScan() {
+  showToast('扫码成功');
+  // Update the code input to show detected code
+  var inputs = document.querySelectorAll('#page-scan-bind .form-input');
+  if (inputs.length > 0) {
+    inputs[0].value = 'TB202606030042';
+  }
+}
+
+/* ===== Info Fill Validation ===== */
+function submitInfoFill() {
+  var inputs = document.querySelectorAll('#page-info-fill .form-input');
+  var name = inputs[0] ? inputs[0].value.trim() : '';
+  var phone = inputs[1] ? inputs[1].value.trim() : '';
+  var textarea = document.querySelector('#page-info-fill .form-textarea');
+  var symptom = textarea ? textarea.value.trim() : '';
+  if (!name || !phone || !symptom) {
+    showToast('请填写完整信息');
+    return;
+  }
+  showToast('信息提交成功，订单状态已更新');
+  setTimeout(function() { navigateTo('order-detail-testing-wait'); }, 300);
+}
+
+/* ===== Return Info ===== */
+function copyReturnAddress() {
+  showToast('寄回地址已复制');
+}
+
+function submitReturnInfo() {
+  var select = document.querySelector('#page-return-info .form-select');
+  var inputs = document.querySelectorAll('#page-return-info .form-input');
+  var logisticsCompany = select ? select.value.trim() : '';
+  var logisticsNum = inputs.length > 0 ? inputs[0].value.trim() : '';
+  if (!logisticsCompany || !logisticsNum) {
+    showToast('请填写物流信息');
+    return;
+  }
+  showToast('寄回信息提交成功，订单状态已变更为检测中');
+  setTimeout(function() { navigateTo('order-detail-testing'); }, 300);
+}
+
+/* ===== Recommend Order ===== */
+function submitRecommendOrder() {
+  showToast('订单已提交');
+  setTimeout(function() {
+    var totalEl = document.getElementById('totalPriceDisplay');
+    if (totalEl) {
+      var recEl = document.getElementById('recPayAmount');
+      if (recEl) recEl.textContent = totalEl.textContent;
+    }
+    navigateTo('pay-success-rec');
+  }, 500);
+}
+
+/* ===== Therapy Order Flow ===== */
+function submitTherapyOrder() {
+  showToast('支付成功，疗法商品订单已变更为待发货');
+  setTimeout(function() { navigateTo('therapy-order-shipping'); }, 400);
+}
+
+function confirmTherapyReceive() {
+  showToast('确认收货成功，疗法商品订单已完成');
+  setTimeout(function() { navigateTo('therapy-order-done'); }, 400);
+}
+
+/* ===== Video and Live Interactions ===== */
+var videoIndex = 0;
+var videoData = [
+  {
+    title: '肠道菌群检测盒使用教程',
+    copy: '后台发布的视频内容，用户端仅支持点赞、评论、分享，评论通过审核后展示。'
+  },
+  {
+    title: '消化健康检测流程演示',
+    copy: '展示检测盒下单、扫码绑定、采样寄回和等待报告的完整用户路径。'
+  },
+  {
+    title: '检测报告查看说明',
+    copy: '说明报告和方案仅作为健康管理参考，具体诊断和用药请遵循医生建议。'
+  }
+];
+
+function updateVideoContent() {
+  var data = videoData[videoIndex];
+  var title = document.getElementById('videoTitle');
+  var copy = document.getElementById('videoCopy');
+  if (title) title.textContent = data.title;
+  if (copy) copy.textContent = data.copy;
+}
+
+function switchVideo(direction) {
+  videoIndex = (videoIndex + direction + videoData.length) % videoData.length;
+  updateVideoContent();
+  showToast('已切换视频');
+}
+
+function initVideoFeed() {
+  var feed = document.getElementById('videoFeed');
+  if (!feed || feed.dataset.bound === 'true') return;
+  feed.dataset.bound = 'true';
+  var startY = 0;
+  feed.addEventListener('touchstart', function(e) {
+    startY = e.touches && e.touches.length ? e.touches[0].clientY : 0;
+  });
+  feed.addEventListener('touchend', function(e) {
+    var endY = e.changedTouches && e.changedTouches.length ? e.changedTouches[0].clientY : startY;
+    var diff = endY - startY;
+    if (Math.abs(diff) > 42) switchVideo(diff < 0 ? 1 : -1);
+  });
+  feed.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) > 20) switchVideo(e.deltaY > 0 ? 1 : -1);
+  });
+}
+
+function likeVideo() {
+  var el = document.getElementById('likeCount');
+  var next = parseInt(el.textContent, 10) + 1;
+  el.textContent = String(next);
+  showToast('已点赞');
+}
+
+function showVideoComments() {
+  showToast('评论已提交审核，通过后展示');
+}
+
+function shareVideo() {
+  showToast('分享面板已打开');
+}
+
+function openLiveCart() {
+  document.getElementById('modalLiveCart').classList.add('active');
+}
+
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, function(ch) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+
+function sendLiveComment() {
+  var input = document.getElementById('liveCommentInput');
+  var value = input ? input.value.trim() : '';
+  if (!value) {
+    showToast('请输入评论内容');
+    return;
+  }
+  var comments = document.getElementById('liveComments');
+  if (comments) {
+    var item = document.createElement('div');
+    item.className = 'live-comment';
+    item.innerHTML = '我：' + escapeHtml(value);
+    comments.appendChild(item);
+    while (comments.children.length > 5) comments.removeChild(comments.children[0]);
+  }
+  showToast('评论已发送');
+  input.value = '';
+}
+
+/* ===== Global Tap Feedback ===== */
+document.addEventListener('click', function(e) {
+  var target = e.target.closest('button,.btn,.cat-item,.grid-card,.list-card,.order-card,.article-card,.therapy-card,.video-action-btn,.live-cart-float,.live-entry,.cart-item,.tool-row,.filter-pill,.addr-card');
+  if (target) {
+    target.classList.add('tap-feedback');
+    setTimeout(function() { target.classList.remove('tap-feedback'); }, 240);
+  }
+});
+
+/* ===== Toast ===== */
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (t._timer) clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+/* ===== Init ===== */
+showPage('home');
+renderOrders();
+initVideoFeed();
+</script>
+</body>
+</html>
