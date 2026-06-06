@@ -4,10 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>检测盒商城与疗法商品原型</title>
-  <meta http-equiv="refresh" content="0; url=miniapp-prototype.html">
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fb;color:#1f2329;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px}.wrap{width:min(880px,100%);background:#fff;border:1px solid #e5e6eb;border-radius:16px;box-shadow:0 16px 48px rgba(31,35,41,.08);padding:36px}.eyebrow{color:#3370ff;font-size:13px;font-weight:600;margin-bottom:12px}.title{font-size:28px;font-weight:800;margin:0 0 10px}.desc{font-size:15px;line-height:1.8;color:#646a73;margin:0 0 28px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{display:block;text-decoration:none;color:inherit;border:1px solid #e5e6eb;border-radius:12px;padding:22px;background:#fafbfc;transition:.18s}.card:hover{border-color:#3370ff;box-shadow:0 8px 24px rgba(51,112,255,.12);transform:translateY(-2px)}.card h2{font-size:18px;margin:0 0 8px}.card p{font-size:14px;color:#646a73;line-height:1.7;margin:0}.tag{display:inline-block;margin-top:16px;padding:6px 10px;border-radius:999px;background:#e8f0fe;color:#3370ff;font-size:12px}@media(max-width:640px){body{padding:16px}.wrap{padding:24px}.grid{grid-template-columns:1fr}.title{font-size:23px}}
+  </style>
 </head>
 <body>
-  <p><a href="miniapp-prototype.html">打开小程序端原型</a></p>
-  <p><a href="admin-prototype.html">打开管理后台原型</a></p>
+  <main class="wrap">
+    <div class="eyebrow">高保真原型</div>
+    <h1 class="title">检测盒商城、疗法商品、内容运营与直播带货系统</h1>
+    <p class="desc">请选择需要演示的端。后台与小程序端分开呈现，避免混排。</p>
+    <div class="grid">
+      <a class="card" href="admin-prototype.html">
+        <h2>管理后台 PC 端</h2>
+        <p>飞书风格 SaaS 后台，包含商品、订单、检测报告、方案、内容、评论、直播和小黄车配置。</p>
+        <span class="tag">打开后台原型</span>
+      </a>
+      <a class="card" href="miniapp-prototype.html">
+        <h2>用户小程序端</h2>
+        <p>医疗健康小程序风格，包含首页、检测盒、疗法商品、视频、直播、订单和报告方案闭环。</p>
+        <span class="tag">打开小程序原型</span>
+      </a>
+    </div>
+  </main>
 </body>
 </html>
