@@ -489,6 +489,291 @@ body{background:linear-gradient(180deg,#EAF4F6 0%,#F7FAFC 52%,#EAF4F6 100%);colo
 .form-input:focus,.form-textarea:focus,.form-select:focus{border-color:#167D8B;box-shadow:0 0 0 3px rgba(22,125,139,.09)}
 .scan-frame{border-color:#167D8B;background:rgba(255,255,255,.58)}
 .scan-frame .scan-line{background:linear-gradient(90deg,transparent,#167D8B,transparent)}
+
+/* ===== Redesigned Product Imagery ===== */
+.product-visual{
+  isolation:isolate;
+  background:
+    radial-gradient(circle at 18% 18%,rgba(255,255,255,.95) 0 18%,transparent 34%),
+    radial-gradient(circle at 82% 76%,rgba(120,199,213,.24) 0 22%,transparent 42%),
+    linear-gradient(145deg,#E9F8F6 0%,#F8FCFC 58%,#EEF6FA 100%);
+}
+.product-visual:after{
+  content:"";
+  position:absolute;
+  left:18%;
+  right:12%;
+  bottom:14%;
+  height:18px;
+  border-radius:50%;
+  background:rgba(23,52,60,.12);
+  filter:blur(8px);
+  z-index:0;
+}
+.pack-box{
+  width:88px;
+  height:98px;
+  border-radius:14px;
+  overflow:visible;
+  background:linear-gradient(180deg,#FFFFFF 0%,#F8FCFD 100%);
+  border:1px solid rgba(170,205,211,.65);
+  box-shadow:0 18px 32px rgba(23,52,60,.18),inset 0 0 0 1px rgba(255,255,255,.72);
+  transform:rotate(-2deg);
+  z-index:2;
+}
+.pack-box:before{
+  height:34px;
+  border-radius:14px 14px 0 0;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.22),transparent 36%),
+    linear-gradient(135deg,#157C8A,#69C8B7);
+}
+.pack-box:after{
+  content:"";
+  position:absolute;
+  top:7px;
+  right:-10px;
+  width:10px;
+  height:86px;
+  border-radius:0 10px 10px 0;
+  background:linear-gradient(180deg,#DDEFF0,#BBDDE1);
+  transform:skewY(12deg);
+  box-shadow:5px 10px 14px rgba(23,52,60,.08);
+}
+.pack-brand{
+  top:8px;
+  left:10px;
+  font-size:7px;
+  letter-spacing:.5px;
+}
+.pack-title{
+  top:42px;
+  left:10px;
+  right:16px;
+  font-size:7px;
+  line-height:1.2;
+  color:#17343C;
+}
+.pack-line{
+  left:10px;
+  right:36px;
+  bottom:18px;
+  height:5px;
+  background:#DCECEF;
+}
+.pack-line:after{
+  top:11px;
+  width:42px;
+  height:5px;
+  background:#EFF6F7;
+}
+.pack-tube{
+  right:-18px;
+  bottom:14px;
+  width:18px;
+  height:56px;
+  border-radius:12px;
+  border:2px solid rgba(22,125,139,.44);
+  background:linear-gradient(180deg,#FFFFFF 0 34%,rgba(93,197,181,.26) 34% 100%);
+  box-shadow:0 10px 20px rgba(23,52,60,.14);
+  z-index:3;
+}
+.pack-tube:before{
+  content:"";
+  position:absolute;
+  left:3px;
+  right:3px;
+  top:-7px;
+  height:9px;
+  border-radius:6px 6px 3px 3px;
+  background:#D2E5E9;
+}
+.pack-card{
+  right:-29px;
+  bottom:20px;
+  width:42px;
+  height:48px;
+  border-radius:10px;
+  background:#fff;
+  border:1px solid #D9E9ED;
+  box-shadow:0 14px 24px rgba(23,52,60,.14);
+  z-index:2;
+}
+.pack-card:before{
+  left:8px;
+  right:8px;
+  top:10px;
+  height:4px;
+  background:#A9CCD2;
+  box-shadow:0 10px 0 #DDECEF,0 20px 0 #EEF6F7;
+}
+.micro-dot{width:5px;height:5px;background:#2F9B99;box-shadow:0 0 0 4px rgba(47,155,153,.08)}
+.kit-gut .pack-card:after{
+  content:"";
+  position:absolute;
+  left:9px;
+  top:29px;
+  width:23px;
+  height:10px;
+  border:2px dotted #2F9B99;
+  border-top:none;
+  border-radius:0 0 14px 14px;
+}
+.kit-female{
+  background:
+    radial-gradient(circle at 18% 18%,rgba(255,255,255,.96) 0 18%,transparent 34%),
+    radial-gradient(circle at 80% 76%,rgba(205,158,224,.22) 0 24%,transparent 42%),
+    linear-gradient(145deg,#F7F3FF,#FCFAFE 58%,#F6EEF7 100%);
+}
+.kit-female .pack-box:before{background:linear-gradient(135deg,#8D73E8,#D99BC9)}
+.kit-female .pack-tube{border-color:rgba(141,115,232,.44);background:linear-gradient(180deg,#fff 0 34%,rgba(217,155,201,.24) 34% 100%)}
+.kit-female .micro-dot{background:#9C7CF5;box-shadow:0 0 0 4px rgba(156,124,245,.08)}
+.kit-female .pack-card:after{
+  content:"";
+  position:absolute;
+  left:12px;
+  top:27px;
+  width:18px;
+  height:18px;
+  border:2px solid #C38CD7;
+  border-radius:50%;
+}
+.kit-metabolic{
+  background:
+    radial-gradient(circle at 18% 18%,rgba(255,255,255,.96) 0 18%,transparent 34%),
+    radial-gradient(circle at 82% 76%,rgba(231,157,74,.22) 0 24%,transparent 42%),
+    linear-gradient(145deg,#FFF7EA,#FAFCF7 58%,#EEF8F3 100%);
+}
+.kit-metabolic .pack-box:before{background:linear-gradient(135deg,#E7A146,#47B486)}
+.kit-metabolic .pack-card:after{
+  left:8px;
+  bottom:8px;
+  width:5px;
+  height:14px;
+  background:#D98A22;
+  box-shadow:9px -7px 0 #19A77A,18px -14px 0 #4D86C9;
+}
+.kit-digestive{
+  background:
+    radial-gradient(circle at 18% 18%,rgba(255,255,255,.96) 0 18%,transparent 34%),
+    radial-gradient(circle at 82% 76%,rgba(77,134,201,.18) 0 24%,transparent 42%),
+    linear-gradient(145deg,#EDF8FF,#FAFCFC 58%,#EEF8F4 100%);
+}
+.kit-digestive .pack-box:before{background:linear-gradient(135deg,#4D86C9,#42B5A6)}
+.kit-digestive .pack-card:after{
+  left:9px;
+  top:25px;
+  width:22px;
+  height:15px;
+  border:3px solid #4D86C9;
+  border-left-color:transparent;
+  border-radius:50%;
+}
+.product-visual-sm .pack-box{
+  width:64px;
+  height:72px;
+  border-radius:10px;
+  transform:rotate(-2deg) scale(.92);
+}
+.product-visual-sm .pack-box:before{height:25px;border-radius:10px 10px 0 0}
+.product-visual-sm .pack-box:after{right:-7px;width:7px;height:62px}
+.product-visual-sm .pack-brand{font-size:5px;top:6px;left:7px}
+.product-visual-sm .pack-title{font-size:5px;top:31px;left:7px;right:10px}
+.product-visual-sm .pack-line{left:7px;right:26px;bottom:13px;height:4px}
+.product-visual-sm .pack-tube{width:12px;height:34px;right:-13px;bottom:12px}
+.product-visual-sm .pack-card{width:28px;height:32px;right:-21px;bottom:14px;border-radius:7px}
+.product-visual-sm .pack-card:before{left:5px;right:5px;top:7px;height:3px;box-shadow:0 7px 0 #DDECEF,0 14px 0 #EEF6F7}
+.detail-img .pack-box{
+  transform:rotate(-2deg);
+  box-shadow:0 24px 46px rgba(23,52,60,.2),inset 0 0 0 1px rgba(255,255,255,.72);
+}
+.therapy-visual{
+  background:
+    radial-gradient(circle at 20% 20%,rgba(255,255,255,.96) 0 18%,transparent 34%),
+    radial-gradient(circle at 82% 76%,rgba(77,134,201,.2) 0 24%,transparent 42%),
+    linear-gradient(145deg,#F0F8FF,#FBFCFC 62%,#EEF7F4 100%);
+}
+.therapy-visual:after{
+  content:"";
+  position:absolute;
+  left:16%;
+  right:12%;
+  bottom:12%;
+  height:16px;
+  border-radius:50%;
+  background:rgba(23,52,60,.12);
+  filter:blur(8px);
+}
+.combo-box{
+  left:12px;
+  bottom:13px;
+  width:62px;
+  height:58px;
+  border-radius:13px;
+  box-shadow:0 16px 28px rgba(23,52,60,.14);
+  z-index:2;
+}
+.combo-box:before{height:22px;border-radius:13px 13px 0 0;background:linear-gradient(135deg,#167D8B,#78C7D5)}
+.combo-box:after{
+  content:"";
+  position:absolute;
+  left:8px;
+  right:12px;
+  bottom:13px;
+  height:5px;
+  border-radius:5px;
+  background:#DCECEF;
+  box-shadow:0 10px 0 #EFF6F7;
+}
+.combo-bottle{
+  right:15px;
+  bottom:15px;
+  width:24px;
+  height:58px;
+  border-radius:10px 10px 7px 7px;
+  box-shadow:0 14px 24px rgba(23,52,60,.14);
+  z-index:3;
+}
+.combo-bottle:before{top:-7px;height:10px;background:#C9DDE3}
+.combo-bottle:after{left:4px;right:4px;top:24px;height:13px;background:#DDF1FF}
+.combo-sachet{
+  right:38px;
+  bottom:12px;
+  width:25px;
+  height:43px;
+  border-radius:9px;
+  transform:rotate(-9deg);
+  box-shadow:0 12px 22px rgba(23,52,60,.1);
+  z-index:1;
+}
+.combo-sachet:before{
+  content:"";
+  position:absolute;
+  left:5px;
+  right:5px;
+  top:10px;
+  height:4px;
+  border-radius:4px;
+  background:#D7EAF0;
+  box-shadow:0 10px 0 #EDF5F7;
+}
+.combo-card{
+  left:50px;
+  top:13px;
+  width:46px;
+  height:34px;
+  border-radius:10px;
+  transform:rotate(5deg);
+  z-index:4;
+}
+.therapy-female{
+  background:
+    radial-gradient(circle at 20% 20%,rgba(255,255,255,.96) 0 18%,transparent 34%),
+    radial-gradient(circle at 82% 76%,rgba(217,155,201,.22) 0 24%,transparent 42%),
+    linear-gradient(145deg,#FAF5FF,#FCFAFC 62%,#F8F0F6 100%);
+}
+.therapy-female .combo-box:before{background:linear-gradient(135deg,#8D73E8,#D99BC9)}
+.therapy-female .combo-bottle:after{background:#F1E7FF}
 </style>
 </head>
 <body>
