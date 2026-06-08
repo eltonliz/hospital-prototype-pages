@@ -259,6 +259,40 @@ tr.highlight td{background:#FFFBE6}
 /* Responsive */
 @media(max-width:1200px){.stat-grid{grid-template-columns:repeat(2,1fr)}.charts-row{flex-direction:column}.info-grid-3{grid-template-columns:1fr}.two-col{flex-direction:column}.col-40,.col-60{width:100%}}
 @media(max-width:768px){.stat-grid{grid-template-columns:repeat(2,1fr)}.filter-bar .form-group{min-width:120px}.summary-row{flex-direction:column}}
+
+/* ===== Medical Operations UI Skin ===== */
+:root{--primary:#167D8B;--primary-hover:#116B78;--success:#19A77A;--warning:#D98A22;--danger:#D9534F;--text:#17262B;--text-secondary:#53666D;--text-muted:#8AA0A8;--bg:#F3F7F9;--bg-sidebar:#F7FAFB;--card-bg:#FFFFFF;--border:#DDE9ED;--nav-active-bg:#E5F5F2;--nav-active-text:#167D8B}
+body{background:linear-gradient(180deg,#EFF7F8 0%,#F5F8FA 42%,#F3F7F9 100%)}
+.sidebar{background:linear-gradient(180deg,#FFFFFF 0%,#F7FAFB 100%);border-right:1px solid #DDE9ED}
+.logo{background:#fff;border-bottom:1px solid #E4EEF1;color:#17343C}
+.logo svg{color:#167D8B}
+.nav-group-title{color:#799099}.nav-item{border-radius:8px;margin:1px 10px;padding-left:12px;padding-right:12px}
+.nav-item.nav-item-child{padding-left:32px}
+.nav-item:hover,.nav-item.active{background:#E5F5F2;color:#167D8B}
+.main-area{background:transparent}.header{background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #DDE9ED}
+.content{padding:26px;background:radial-gradient(circle at top right,rgba(66,181,166,.08),transparent 34%)}
+.card,.stat-card,.chart-card,.summary-card{border-color:#DDE9ED;border-radius:10px;box-shadow:0 8px 24px rgba(23,52,60,.05)}
+.stat-card{position:relative;overflow:hidden}
+.stat-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#D7ECE8}
+.stat-card:hover{box-shadow:0 12px 28px rgba(23,52,60,.08);transform:translateY(-1px)}
+.stat-value{color:#17343C}.stat-label{color:#6F858D}
+.card-title{color:#17343C;font-weight:600}
+thead th{background:#F7FAFB;color:#6F858D;border-bottom-color:#DDE9ED}
+tbody td{border-bottom-color:#E7EEF1}tbody tr:hover{background:#F5FBFA}
+.btn-primary{background:#167D8B;border-color:#167D8B;box-shadow:0 6px 16px rgba(22,125,139,.13)}
+.btn-primary:hover{background:#116B78;border-color:#116B78}
+.btn-outline{border-color:#167D8B;color:#167D8B;background:#F6FCFD}.btn-outline:hover{background:#E5F5F2}
+.btn-text{color:#167D8B}.btn-text:hover{color:#116B78}
+.user-avatar{background:#167D8B}
+.badge-info{background:#E8F4FF;color:#2F65B8}.badge-success{background:#E5F5F2;color:#147466}.badge-warning{background:#FFF4E5;color:#B86A12}.badge-purple{background:#EEF2FF;color:#5368C9}.badge-teal{background:#E5F5F2;color:#147466}
+.filter-bar{background:#fff;border-color:#DDE9ED;border-radius:10px;box-shadow:0 6px 18px rgba(23,52,60,.04)}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#167D8B;box-shadow:0 0 0 3px rgba(22,125,139,.09)}
+.form-section{border-left-color:#167D8B}.pagination .pages span.active{background:#167D8B;border-color:#167D8B}
+.timeline-step.current .timeline-dot{background:#167D8B;border-color:#167D8B;box-shadow:0 0 0 3px rgba(22,125,139,.18)}
+.timeline-step.current .timeline-event{color:#167D8B}
+.prod-img{background:#F3F8FA;color:#167D8B;border:1px solid #DDE9ED;border-radius:8px}
+.note-box{background:#FFF8E8;border-color:#F1DCA8;color:#8C6E00}
+.chart-container canvas,.content-chart-container canvas{filter:saturate(.9)}
 </style>
 </head>
 <body>
@@ -1769,15 +1803,15 @@ function initCharts(){
   chartsInitialized = true;
   const pieCtx = document.getElementById('pieChart');
   if(pieCtx){
-    new Chart(pieCtx,{type:'doughnut',data:{labels:['检测盒待发货','检测盒检测中','待出方案','疗法待发货','疗法已完成'],datasets:[{data:[18,21,9,12,42],backgroundColor:['#3370FF','#7C5CFC','#FF8F1F','#00B578','#5CC4B0'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:12}}}},cutout:'62%'}});
+    new Chart(pieCtx,{type:'doughnut',data:{labels:['检测盒待发货','检测盒检测中','待出方案','疗法待发货','疗法已完成'],datasets:[{data:[18,21,9,12,42],backgroundColor:['#167D8B','#4D86C9','#D98A22','#19A77A','#78C7D5'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:12}}}},cutout:'62%'}});
   }
   const barCtx = document.getElementById('barChart');
   if(barCtx){
-    new Chart(barCtx,{type:'bar',data:{labels:['5/31','6/1','6/2','6/3','6/4','6/5','6/6'],datasets:[{label:'检测盒订单',data:[12,15,9,11,14,17,19],backgroundColor:'#3370FF',borderRadius:4},{label:'疗法商品订单',data:[6,8,7,10,12,13,15],backgroundColor:'#00B578',borderRadius:4},{label:'方案转化订单',data:[2,3,2,2,3,4,5],backgroundColor:'#FF8F1F',borderRadius:4}]},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#F2F3F5'}}}}});
+    new Chart(barCtx,{type:'bar',data:{labels:['5/31','6/1','6/2','6/3','6/4','6/5','6/6'],datasets:[{label:'检测盒订单',data:[12,15,9,11,14,17,19],backgroundColor:'#167D8B',borderRadius:4},{label:'疗法商品订单',data:[6,8,7,10,12,13,15],backgroundColor:'#19A77A',borderRadius:4},{label:'方案转化订单',data:[2,3,2,2,3,4,5],backgroundColor:'#D98A22',borderRadius:4}]},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#E7EEF1'}}}}});
   }
   const contentCtx = document.getElementById('contentChart');
   if(contentCtx){
-    new Chart(contentCtx,{type:'line',data:{labels:['周一','周二','周三','周四','周五','周六','周日'],datasets:[{label:'文章浏览',data:[1800,2100,1650,2400,2860,3200,3380],borderColor:'#3370FF',backgroundColor:'rgba(51,112,255,0.1)',tension:0.35,fill:true},{label:'视频播放',data:[4200,4600,5100,5800,6300,6900,7200],borderColor:'#00B578',backgroundColor:'rgba(0,181,120,0.1)',tension:0.35,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#F2F3F5'}}}}});
+    new Chart(contentCtx,{type:'line',data:{labels:['周一','周二','周三','周四','周五','周六','周日'],datasets:[{label:'文章浏览',data:[1800,2100,1650,2400,2860,3200,3380],borderColor:'#167D8B',backgroundColor:'rgba(22,125,139,0.1)',tension:0.35,fill:true},{label:'视频播放',data:[4200,4600,5100,5800,6300,6900,7200],borderColor:'#19A77A',backgroundColor:'rgba(25,167,122,0.1)',tension:0.35,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#E7EEF1'}}}}});
   }
 }
 document.addEventListener('click',function(e){
